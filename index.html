@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#0a0402">
-    <title>Blackout 21 - Le Jeu à Boire</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>♠️</text></svg>">
+    <title>Blackjack - Édition Ultime</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -58,6 +56,24 @@
             --glass-border: rgba(255, 102, 0, 0.6);
         }
 
+        /* THÈME : L'INFILTRÉ */
+        body.theme-infiltre {
+            --bg-color: #0b0c10;
+            --table-color: radial-gradient(circle at 50% 20%, #1f2833 0%, #0b0c10 100%);
+            --gold: #66fcf1;
+            --gold-metallic: linear-gradient(135deg, #66fcf1, #45f3ff, #1f2833, #fff, #00a8cc);
+            --glass-border: rgba(102, 252, 241, 0.5);
+        }
+
+        /* THÈME : PACTE DE SANG */
+        body.theme-pacte-de-sang {
+            --bg-color: #1a0005;
+            --table-color: radial-gradient(circle at 50% 20%, #5c0011 0%, #1a0005 100%);
+            --gold: #ff3366;
+            --gold-metallic: linear-gradient(135deg, #ff3366, #ff6699, #990022, #fff, #4a000e);
+            --glass-border: rgba(255, 51, 102, 0.6);
+        }
+
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
             font-family: 'Montserrat', sans-serif;
@@ -90,11 +106,7 @@
         }
         .lobby-box::-webkit-scrollbar { display: none; }
 
-        /* LOGO STYLES */
-        .app-logo { font-family: 'Playfair Display', serif; font-size: 2.8em; margin: 0 0 5px 0; text-transform: uppercase; letter-spacing: 2px; transition: 1s ease; font-weight: 900;}
-        .logo-word { background: var(--gold-metallic); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0px 4px 15px rgba(212, 175, 55, 0.2); }
-        .logo-number { color: var(--danger); text-shadow: 0px 4px 15px rgba(214, 48, 49, 0.4); }
-
+        h1 { font-family: 'Playfair Display', serif; font-size: 2.8em; margin: 0 0 5px 0; text-transform: uppercase; background: var(--gold-metallic); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0px 4px 15px rgba(212, 175, 55, 0.2); letter-spacing: 2px; transition: 1s ease;}
         h2 { font-family: 'Playfair Display', serif; font-size: 1.8em; margin: 0 0 10px 0; color: var(--gold); transition: color 1s ease;}
         h3 { font-size: 1.1em; margin: 0; }
         
@@ -130,6 +142,7 @@
         .player-mat.active-turn { border-color: var(--gold); background: rgba(0, 0, 0, 0.9); box-shadow: 0 0 20px var(--glass-border); transform: translateY(-3px); }
         .player-mat.bust { opacity: 0.5; filter: grayscale(80%); border-color: var(--danger); }
         .player-mat.target { border-color: #ff6600; box-shadow: 0 0 30px #ff6600; animation: firePulse 1s infinite;}
+        .player-mat.linked-blood { border-color: #ff3366; box-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
         
         @keyframes firePulse { 0% { box-shadow: 0 0 10px #ff6600; } 50% { box-shadow: 0 0 30px #ff3300, inset 0 0 15px #ff6600; } 100% { box-shadow: 0 0 10px #ff6600; } }
 
@@ -137,6 +150,7 @@
         .card { background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); color: #000; width: 55px; height: 80px; border-radius: 5px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; box-shadow: -3px 3px 8px rgba(0,0,0,0.5); border: 1px solid #ccc; position: relative; margin-left: -20px; }
         .card.red { color: var(--danger); }
         .card.hidden { background: repeating-linear-gradient(45deg, #111, #111 6px, #000 6px, #000 12px); color: transparent; border: 2px solid var(--gold); }
+        .card.hidden::after { content: '?' !important; color: var(--gold) !important; font-size: 28px !important; transform: none !important; position: static !important; opacity: 0.5; }
         .card:not(.hidden)::before { content: attr(data-suit); position: absolute; top: 2px; left: 4px; font-size: 12px; line-height:1;}
         .card:not(.hidden)::after { content: attr(data-suit); position: absolute; bottom: 2px; right: 4px; font-size: 12px; transform: rotate(180deg); line-height:1;}
         .card .center-suit { font-size: 35px; opacity: 0.15; position: absolute; }
@@ -155,21 +169,24 @@
         .take-color { color: var(--danger); font-size: 1.5em;}
         .btn-give { background: rgba(0,0,0,0.8); color: var(--gold); border: 1px solid var(--gold); padding: 12px; font-size: 14px; font-weight: 900; border-radius: 8px; width: 100%; margin-bottom: 8px; text-transform: uppercase; cursor: pointer; }
 
-        /* SLOT MACHINE STYLES */
-        .slot-machine-container { background: linear-gradient(180deg, #b33939, #ff5252, #b33939); padding: 20px; border-radius: 20px; border: 5px solid var(--gold); box-shadow: 0 0 50px rgba(255, 0, 0, 0.5); width: 80%; max-width: 600px; text-align: center; }
-        .slot-machine-window { background: #fff; padding: 20px; border-radius: 10px; border: inset 5px #ccc; margin-top: 20px; min-height: 120px; display: flex; align-items: center; justify-content: center; flex-direction: column; overflow: hidden; box-shadow: inset 0 0 20px rgba(0,0,0,0.5);}
-        .slot-name { font-size: 3em; font-weight: 900; color: #000; text-transform: uppercase; letter-spacing: 2px; }
-        .slot-title-text { font-family: 'Playfair Display', serif; font-size: 2em; color: #fff; text-shadow: 2px 2px 0 #000; margin: 0; }
-
         .tv-top-bar { display: flex; justify-content: center; margin-bottom: 5px; width: 100%; position: relative;}
         .tv-code-badge { font-weight: 900; background: #000; padding: 6px 15px; border-radius: 6px; border: 1px solid var(--gold); color: var(--gold); font-size: 1em; letter-spacing: 2px; transition: 1s ease;}
 
-        /* AVERTISSEMENT MODE PORTRAIT SUR MOBILE */
-        #portrait-warning { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-color); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; box-sizing: border-box; }
-        @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(-90deg); } }
-        
-        body.is-mobile-game.is-portrait #portrait-warning { display: flex; }
+        /* TEST BUTTONS */
+        .admin-controls { position: absolute; top: 0; left: 0; display: flex; gap: 5px; opacity: 0.3; transition: 0.2s; z-index: 9999;}
+        .admin-controls:hover { opacity: 1; }
+        .btn-admin { font-size: 10px; padding: 5px 8px; background: #333; color: #fff; border: 1px solid #666; cursor: pointer; border-radius: 4px;}
 
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
+        @keyframes dealCard { 0% { opacity: 0; transform: translate3d(20px, -30px, 0) rotateZ(10deg); } 100% { opacity: 1; transform: translate3d(0, 0, 0) rotateZ(0deg); } }
+        @keyframes slideDown { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        
+        #error-msg { color: var(--danger); font-weight: bold; margin-top: 5px; font-size: 0.9em; }
+        #tv-result-msg { font-size: 20px; font-family: 'Playfair Display', serif; font-weight: 900; margin: 10px 0; color: #fff;}
+        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.7em; font-weight: 900; background: rgba(0,0,0,0.8); margin-bottom: 5px; text-transform: uppercase; border: 1px solid var(--gold); color: var(--gold); transition: 1s ease;}
+        
         /* OPTIMISATION PAYSAGE (Smartphones) */
         @media screen and (orientation: landscape) and (max-height: 500px) {
             #screen-mobile-game .lobby-box { padding: 10px; }
@@ -182,63 +199,25 @@
             .btn-game { padding: 8px 5px; font-size: 12px; }
             .event-banner { font-size: 0.75em; padding: 5px; }
         }
-
-        /* ==========================================================================
-           MODIFICATIONS v0.2 : EXPANSION ET TAILLES ÉCRAN TV
-           ========================================================================== */
-        #screen-tv-lobby .lobby-box {
-            max-width: 92vw;
-            width: 85%;
-            padding: 45px;
-            border-radius: 24px;
-        }
-        #screen-tv-lobby h2 { font-size: 3em; margin-bottom: 15px; }
-        #screen-tv-lobby .room-code { font-size: 92px; padding: 15px 45px; letter-spacing: 12px; margin: 20px 0; }
-        #screen-tv-lobby h3 { font-size: 2em; margin-top: 25px; }
-        #screen-tv-lobby .player-badge { font-size: 22px; padding: 14px 28px; border-radius: 10px; }
-        #start-game-btn { font-size: 1.5em !important; padding: 18px 45px !important; }
-
-        #screen-tv-game #tv-board { gap: 25px; }
-        #screen-tv-game .dealer-area { max-width: 96vw; padding: 25px; border-radius: 0 0 70px 70px; }
-        #screen-tv-game .dealer-area h2 { font-size: 2.8em; }
-        #screen-tv-game #tv-dealer-score { font-size: 0.75em !important; }
-        
-        #screen-tv-game .players-area { gap: 20px; padding: 0 20px; }
-        #screen-tv-game .player-mat { min-width: 210px; max-width: 300px; flex-grow: 1; padding: 22px; border-radius: 14px; }
-        #screen-tv-game .player-mat h3 { font-size: 1.6em; }
-        #screen-tv-game .player-mat div[style*="color:var(--gold)"] { font-size: 1.2em !important; height: 24px; }
-        #screen-tv-game .player-mat div[style*="position:absolute"] { font-size: 1.4em !important; padding: 6px 22px !important; bottom: -18px !important; }
-
-        /* Agrandissement des cartes sur l'écran TV */
-        #screen-tv-game .cards-container { min-height: 140px; padding-left: 30px; margin-top: 15px; }
-        #screen-tv-game .card { width: 85px; height: 120px; font-size: 38px; border-radius: 8px; margin-left: -30px; box-shadow: -4px 4px 12px rgba(0,0,0,0.6); }
-        #screen-tv-game .card:not(.hidden)::before { font-size: 18px; top: 4px; left: 6px; }
-        #screen-tv-game .card:not(.hidden)::after { font-size: 18px; bottom: 4px; right: 6px; }
-        #screen-tv-game .card .center-suit { font-size: 55px; }
-
-        #tv-result-msg { font-size: 34px; margin: 20px 0; font-weight: 900; }
-        .tv-code-badge { font-size: 1.5em; padding: 10px 30px; }
-        #new-round-btn { font-size: 1.4em !important; padding: 18px 40px !important; max-width: 400px !important; }
-
-        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes popIn { 0% { opacity: 0; transform: scale(0.9); } 100% { opacity: 1; transform: scale(1); } }
-        @keyframes dealCard { 0% { opacity: 0; transform: translate3d(20px, -30px, 0) rotateZ(10deg); } 100% { opacity: 1; transform: translate3d(0, 0, 0) rotateZ(0deg); } }
-        @keyframes slideDown { 0% { transform: translateY(-50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
-        
-        #error-msg { color: var(--danger); font-weight: bold; margin-top: 5px; font-size: 0.9em; }
-        #tv-result-msg { font-size: 20px; font-family: 'Playfair Display', serif; font-weight: 900; margin: 10px 0; color: #fff;}
-        .status-badge { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 0.7em; font-weight: 900; background: rgba(0,0,0,0.8); margin-bottom: 5px; text-transform: uppercase; border: 1px solid var(--gold); color: var(--gold); transition: 1s ease;}
     </style>
 </head>
 <body>
 
 <div id="app-container">
 
-    <div id="screen-home" class="screen active">
+    <div id="screen-loading" class="screen active">
         <div class="lobby-box">
-            <div class="app-logo"><span style="color: var(--gold);">♠️</span> <span class="logo-word">BLACKOUT</span> <span class="logo-number">21</span> <span style="color: var(--gold);">🍷</span></div>
-            <div class="prevention" style="margin-bottom: 20px;">L'Édition Ultime</div>
+            <h1 style="font-size: 3em; margin-bottom: 0;">Blackjack</h1>
+            <div class="prevention" style="margin-bottom: 20px;">Édition Ultime</div>
+            <div style="width: 40px; height: 40px; border: 3px solid rgba(212,175,55,0.1); border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto;"></div>
+            <p id="loading-text" style="color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8em;">Mélange des cartes...</p>
+        </div>
+    </div>
+
+    <div id="screen-home" class="screen">
+        <div class="lobby-box">
+            <h1>Blackjack</h1>
+            <div class="prevention" style="margin-bottom: 20px;">Édition Ultime</div>
             <h2>Ouverture de la Table</h2>
             <button class="btn btn-main" onclick="window.initTVMode()">📺 Banque (Écran TV)</button>
             <button class="btn btn-sub" onclick="window.showScreen('screen-join')">📱 Joueur (Smartphone)</button>
@@ -247,7 +226,6 @@
 
     <div id="screen-join" class="screen">
         <div class="lobby-box">
-            <div class="app-logo" style="font-size: 2em; margin-bottom: 20px;"><span style="color: var(--gold);">♠️</span> <span class="logo-word">BLACKOUT</span> <span class="logo-number">21</span></div>
             <h2>Rejoindre</h2>
             <input type="text" id="input-pseudo" placeholder="VOTRE PSEUDO" maxlength="12">
             <input type="text" id="input-room" placeholder="CODE DE TABLE" maxlength="4">
@@ -269,41 +247,39 @@
         <div class="lobby-box" style="border-color: var(--danger);">
             <h2 style="color: var(--danger);">🚨 Table Fermée</h2>
             <p style="font-size: 0.9em; opacity: 0.8;">La session a pris fin.</p>
-            <button class="btn btn-main" onclick="localStorage.removeItem('bj_pseudo'); localStorage.removeItem('bj_room'); window.location.reload()">Menu Principal</button>
+            <button class="btn btn-main" onclick="window.location.reload()">Menu Principal</button>
         </div>
     </div>
 
     <div id="screen-tv-lobby" class="screen">
         <div class="lobby-box" style="max-width: 800px;">
-            <div class="app-logo" style="font-size: 2em; margin-bottom: 10px;"><span class="logo-word">BLACKOUT</span> <span class="logo-number">21</span></div>
             <h2>CODE D'ACCÈS VIP</h2>
             <div id="display-room-code" class="room-code">----</div>
             <h3 style="color: #fff; margin-top: 10px; border-bottom: 1px solid var(--glass-border); padding-bottom: 5px;">Joueurs à table (<span id="player-count">0</span>/6)</h3>
             <ul id="tv-player-list" class="player-list"></ul>
             <button id="start-game-btn" class="btn btn-main" style="display: none; padding: 15px; font-size: 1.1em; margin-top: 10px;" onclick="window.startGame()">Faites vos jeux ♠️</button>
-            <button class="btn btn-sub" style="margin-top: 25px; max-width: 280px; font-size: 14px; padding: 10px 20px;" onclick="window.exitTVMode()">← Fermer la Table</button>
-        </div>
-    </div>
-
-    <div id="tv-slot-modal" class="fullscreen-modal" style="z-index: 3000;">
-        <div class="slot-machine-container">
-            <h1 id="tv-slot-title" class="slot-title-text">🎰 TIRAGE AU SORT</h1>
-            <div id="tv-slot-window" class="slot-machine-window">
-                </div>
         </div>
     </div>
 
     <div id="screen-tv-game" class="screen">
         <div class="tv-top-bar">
+            <div class="admin-controls" id="tv-admin-controls" style="display:none;">
+                <button class="btn-admin" onclick="forceEvent('happy_hour')">X2</button>
+                <button class="btn-admin" onclick="forceEvent('red_alert')">Mort</button>
+                <button class="btn-admin" onclick="forceEvent('green_carpet')">Vegas</button>
+                <button class="btn-admin" onclick="forceEvent('russian_roulette')">Roulette</button>
+                <button class="btn-admin" onclick="forceEvent('infiltre')">Infiltré</button>
+                <button class="btn-admin" onclick="forceEvent('pacte_de_sang')">Pacte</button>
+                <button class="btn-admin" onclick="forceEvent(null)">Normal</button>
+            </div>
             <div class="tv-code-badge">TABLE: <span id="tv-game-room-code"></span></div>
-            <button class="btn btn-sub" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); width: auto; padding: 6px 15px; font-size: 12px; margin: 0; border-width: 1px; border-radius: 6px;" onclick="window.exitTVMode()">← Quitter</button>
         </div>
         
         <div id="tv-event-banner" class="event-banner"></div>
 
         <div id="tv-board">
             <div class="dealer-area">
-                <h2>LA BANQUE <span id="tv-dealer-score" style="font-size: 1em; color: var(--gold); margin-left: 10px; font-family: 'Montserrat', sans-serif; background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 8px; border: 1px solid var(--gold);"></span></h2>
+                <h2>LA BANQUE <span id="tv-dealer-score" style="font-size: 0.6em; color: var(--gold); margin-left: 10px; font-family: 'Montserrat', sans-serif;"></span></h2>
                 <div class="cards-container" id="tv-dealer-cards"></div>
             </div>
             <div id="tv-result-msg"></div>
@@ -314,11 +290,14 @@
 
     <div id="screen-mobile-game" class="screen">
         <div class="lobby-box" style="padding: 15px; width: 100%; border: none; background: transparent; box-shadow: none;">
+            
+            <div style="background: rgba(0,0,0,0.8); border: 1px solid var(--gold); color: var(--gold); font-weight: 900; padding: 5px 15px; border-radius: 6px; letter-spacing: 2px; font-size: 0.9em; margin-bottom: 10px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">TABLE: <span id="mobile-game-room-code"></span></div>
+
             <div id="mobile-event-banner" class="event-banner" style="font-size: 0.85em; margin-bottom: 10px;"></div>
             <div id="mobile-status-badge" class="status-badge">Phase de jeu</div>
             <h2 id="mobile-status-title" style="margin-top: 0; font-size: 1.2em;">Chargement...</h2>
             
-            <div id="mobile-bank-score" style="color: var(--gold); font-weight: 900; font-size: 1.2em; margin: 10px 0; background: rgba(0,0,0,0.8); padding: 8px 15px; border-radius: 6px; border: 1px solid var(--gold); display: inline-block;">Banque : --</div>
+            <div id="mobile-bank-score" style="color: var(--gold); font-weight: 800; font-size: 0.85em; margin: 5px 0; background: rgba(0,0,0,0.8); padding: 6px 12px; border-radius: 6px; border: 1px solid var(--glass-border);">Banque : --</div>
 
             <div style="background: rgba(0,0,0,0.6); padding: 10px; border-radius: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; border: 1px solid var(--glass-border);">
                 <div id="mobile-my-cards" class="cards-container" style="min-height: 90px; margin-top:0;"></div>
@@ -379,20 +358,48 @@
 
         let lastLobbyPlayersHtml = "", lastDealerCardsHtml = "", lastPlayersAreaHtml = "", lastMobileCardsHtml = "";
         let isRevealing = false;
-        let lastStatus = "waiting", tvLastStatus = "waiting";
+        let lastStatus = "waiting";
+
+        // MOTEUR AUDIO PROCÉDURAL (Pas de fichiers mp3 externes nécessaires !)
+        let audioCtx = null;
+        function playProceduralSound(type) {
+            if (!isTV) return; // Seule la TV diffuse l'ambiance sonore globale
+            try {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                const now = audioCtx.currentTime;
+                
+                if (type === 'deal') {
+                    osc.type = 'triangle'; osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
+                    gain.gain.setValueAtTime(0.12, now); gain.gain.linearRampToValueAtTime(0, now + 0.08);
+                    osc.start(now); osc.stop(now + 0.08);
+                } else if (type === 'bust') {
+                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, now);
+                    osc.frequency.linearRampToValueAtTime(30, now + 0.4);
+                    gain.gain.setValueAtTime(0.25, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                } else if (type === 'blackjack') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
+                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+                    gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
+                    osc.start(now); osc.stop(now + 0.4);
+                } else if (type === 'suspense') {
+                    osc.type = 'sine'; osc.frequency.setValueAtTime(55, now);
+                    gain.gain.setValueAtTime(0.4, now); gain.gain.linearRampToValueAtTime(0, now + 0.25);
+                    osc.start(now); osc.stop(now + 0.25);
+                }
+            } catch(e) { console.error("Audio error", e); }
+        }
 
         const vibrate = (pattern) => { if (navigator.vibrate) navigator.vibrate(pattern); };
-
-        // Détection de l'orientation pour le mobile
-        function checkOrientation() {
-            if (window.innerHeight > window.innerWidth) {
-                document.body.classList.add('is-portrait');
-            } else {
-                document.body.classList.remove('is-portrait');
-            }
-        }
-        window.addEventListener('resize', checkOrientation);
-        checkOrientation(); // Appel initial
 
         function calculateScore(hand) {
             let score = 0; let aces = 0;
@@ -406,22 +413,6 @@
             return score;
         }
 
-        function displayScore(hand) {
-            if(!hand) return 0;
-            let minScore = 0; let hasAce = false;
-            for (let card of hand) {
-                if (['J', 'Q', 'K'].includes(card.value)) minScore += 10;
-                else if (card.value === 'A') { minScore += 1; hasAce = true; }
-                else minScore += parseInt(card.value);
-            }
-            let maxScore = (hasAce && minScore + 10 <= 21) ? minScore + 10 : minScore;
-            
-            if (minScore !== maxScore && maxScore !== 21) {
-                return `${minScore}/${maxScore}`;
-            }
-            return maxScore;
-        }
-
         function createHtmlCard(card, hidden = false, index = 0, totalCards = 1) {
             const shouldAnimate = (totalCards <= 2) || (index === totalCards - 1);
             const animationStyle = shouldAnimate ? `animation: dealCard 0.4s ease-out forwards; opacity: 0; animation-delay: ${index * 0.1}s;` : `opacity: 1; animation: none;`;
@@ -433,12 +424,15 @@
         window.showScreen = (screenId) => {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
-            
-            // Activation de la vérification Paysage uniquement sur l'écran du jeu
-            document.body.classList.toggle('is-mobile-game', screenId === 'screen-mobile-game');
-            
             const err = document.getElementById('error-msg');
             if(err) err.innerText = ""; 
+        };
+
+        window.exitTVMode = async () => {
+            if (currentRoomCode) {
+                await updateDoc(doc(db, "rooms", currentRoomCode), { status: "closed" }).catch(()=>{});
+            }
+            window.location.reload();
         };
 
         window.addEventListener('beforeunload', () => {
@@ -446,22 +440,14 @@
                 if (isTV) updateDoc(doc(db, "rooms", currentRoomCode), { status: "closed" }).catch(()=>{});
                 else if (myPseudo && localRoomData) {
                     if (localRoomData.status === "waiting") updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayRemove(myPseudo) }).catch(()=>{});
+                    else if (["playing", "distributing"].includes(localRoomData.status)) {
+                        let updates = { [`playerStates.${myPseudo}`]: "left" };
+                        if (localRoomData.players[localRoomData.currentTurnIndex]?.startsWith(myPseudo)) updates.currentTurnIndex = localRoomData.currentTurnIndex + 1;
+                        updateDoc(doc(db, "rooms", currentRoomCode), updates).catch(()=>{});
+                    }
                 }
             }
         });
-
-        // FONCTION RETOUR TV (v0.2)
-        window.exitTVMode = async () => {
-            if (currentRoomCode) {
-                try {
-                    await updateDoc(doc(db, "rooms", currentRoomCode), { status: "closed" });
-                } catch(e){}
-            }
-            currentRoomCode = "";
-            isTV = false;
-            localRoomData = null;
-            window.showScreen('screen-home');
-        };
 
         setInterval(() => {
             if (!isTV && myPseudo && currentRoomCode && localRoomData && localRoomData.status !== "closed") {
@@ -496,21 +482,23 @@
             
             await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [], pings: {}, tvPing: Date.now(), streaks: {}, roundsSinceLastEvent: 0, nextForcedEvent: null });
             document.getElementById('display-room-code').innerText = currentRoomCode;
+            document.getElementById('tv-game-room-code').innerText = currentRoomCode;
+            document.getElementById('tv-admin-controls').style.display = "flex";
             window.showScreen('screen-tv-lobby');
 
             onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
                 if (docSnap.exists()) {
                     localRoomData = docSnap.data();
                     if (localRoomData.status === "waiting") updateLobbyTV();
-                    else {
-                        if (localRoomData.status === "rolling" && tvLastStatus !== "rolling") {
-                            runSlotAnimationTV(localRoomData.rollingType, localRoomData.rollingResults);
-                        }
-                        updateGameTV();
-                    }
-                    tvLastStatus = localRoomData.status;
+                    else updateGameTV();
                 }
             });
+        };
+
+        window.forceEvent = async (eventName) => {
+            if (!currentRoomCode || !isTV) return;
+            await updateDoc(doc(db, "rooms", currentRoomCode), { nextForcedEvent: eventName });
+            alert(eventName ? `Événement ${eventName} forcé pour la prochaine manche.` : "Partie normale forcée pour la prochaine manche.");
         };
 
         function updateLobbyTV() {
@@ -520,47 +508,6 @@
             document.getElementById('start-game-btn').style.display = (localRoomData.players.length > 0) ? "inline-block" : "none";
         }
 
-        // --- GESTION ANIMATION MACHINE À SOUS (TV UNIQUEMENT) ---
-        async function runSlotAnimationTV(type, results) {
-            const modal = document.getElementById('tv-slot-modal');
-            const title = document.getElementById('tv-slot-title');
-            const windowEl = document.getElementById('tv-slot-window');
-            modal.style.display = "flex";
-            
-            title.innerText = type === "roulette" ? "🎰 ROULETTE RUSSE : CIBLE" : "🚨 BLACKJACK : SANCTION DE LA BANQUE";
-            
-            let players = localRoomData.players.filter(p => !p.includes("_split"));
-            if(players.length === 0) players = ["AUCUN JOUEUR"];
-
-            let ticks = 0;
-            let interval = setInterval(() => {
-                windowEl.innerHTML = `<div class="slot-name">${players[Math.floor(Math.random() * players.length)]}</div>`;
-                ticks++;
-                
-                if (ticks > 25) { // Fin du roulement rapide après ~2.5s
-                    clearInterval(interval);
-                    
-                    if (type === "roulette") {
-                        windowEl.innerHTML = `<div class="slot-name" style="color: var(--danger); font-size: 3.5em;">🎯 ${results[0]} 🎯</div>
-                                              <div style="color: black; font-weight: bold; margin-top: 5px;">Cible Verrouillée</div>`;
-                    } else {
-                        let counts = {};
-                        results.forEach(r => counts[r] = (counts[r]||0) + 1);
-                        let resHtml = Object.entries(counts).map(([name, count]) => `<div style="font-size: 1.5em; font-weight: 900; color: var(--danger);">${name} : 🍺 x${count}</div>`).join('');
-                        windowEl.innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;">${resHtml}</div>`;
-                    }
-                    
-                    setTimeout(() => {
-                        modal.style.display = "none";
-                        if (isTV) {
-                            let nextStatus = type === "roulette" ? "playing" : "distributing";
-                            updateDoc(doc(db, "rooms", currentRoomCode), { status: nextStatus });
-                        }
-                    }, 3500); // Laisse le résultat affiché ~3.5s
-                }
-            }, 100);
-        }
-
         window.startGame = async () => {
             const now = Date.now();
             let activePlayers = localRoomData.players.filter(p => !p.includes("_split") && localRoomData.playerStates?.[p] !== "left" && (now - (localRoomData.pings?.[p] || now) < 25000));
@@ -568,25 +515,26 @@
             let nextEvt = localRoomData.nextForcedEvent || null;
             let roundsCounter = (localRoomData.roundsSinceLastEvent || 0) + 1;
             
-            // PROBABILITÉS D'ÉVÉNEMENTS
-            if (nextEvt === null && roundsCounter >= 10) {
-                let rand = Math.random(); 
-                if (rand < 0.15) {
-                    nextEvt = "happy_hour";        // 15%
-                } else if (rand < 0.25) { 
-                    nextEvt = "green_carpet";      // 10%
-                } else if (rand < 0.325) {
-                    nextEvt = "russian_roulette";  // 7.5%
-                } else if (rand < 0.375) {
-                    nextEvt = "red_alert";         // 5%
+            // Événements plus fréquents : 40% de chance toutes les 5 manches
+            if (nextEvt === null && roundsCounter >= 5) {
+                if (Math.random() < 0.40) {
+                    const evts = ["happy_hour", "red_alert", "green_carpet", "russian_roulette", "infiltre", "pacte_de_sang"];
+                    nextEvt = evts[Math.floor(Math.random() * evts.length)];
                 }
             }
             if (nextEvt) roundsCounter = 0;
 
             let target = null;
-            let isRoulette = (nextEvt === "russian_roulette" && activePlayers.length > 0);
-            if (isRoulette) {
+            if (nextEvt === "russian_roulette" && activePlayers.length > 0) {
                 target = activePlayers[Math.floor(Math.random() * activePlayers.length)];
+            }
+
+            let linked = [];
+            if (nextEvt === "pacte_de_sang" && activePlayers.length >= 2) {
+                let shuffled = [...activePlayers].sort(() => Math.random() - 0.5);
+                linked = [shuffled[0], shuffled[1]];
+            } else if (nextEvt === "pacte_de_sang") {
+                nextEvt = null; // Pas assez de joueurs pour faire un pacte
             }
 
             let deck = [];
@@ -597,31 +545,18 @@
             activePlayers.forEach(p => { playerHands[p] = [deck.pop(), deck.pop()]; playerStates[p] = "playing"; });
             
             lastDealerCardsHtml = ""; lastPlayersAreaHtml = ""; lastMobileCardsHtml = "";
+            window.lastTotalCardsCount = 0; window.lastBustsCount = 0; window.lastStatusForSound = "playing";
 
-            let updates = {
-                players: activePlayers, deck, playerHands, playerStates, 
+            await updateDoc(doc(db, "rooms", currentRoomCode), {
+                players: activePlayers, status: "playing", deck, playerHands, playerStates, 
                 dealerHand: [deck.pop(), deck.pop()], currentTurnIndex: 0, dealerPlayed: false, dealerPlaying: false,
                 results: {}, realResults: {}, poolToGive: {}, receivedSips: {}, doubled: {},
-                currentEvent: nextEvt, eventTarget: target, roundsSinceLastEvent: roundsCounter, nextForcedEvent: null
-            };
-
-            if (isRoulette) {
-                updates.status = "rolling";
-                updates.rollingType = "roulette";
-                updates.rollingResults = [target];
-            } else {
-                updates.status = "playing";
-            }
-
-            await updateDoc(doc(db, "rooms", currentRoomCode), updates);
+                currentEvent: nextEvt, eventTarget: target, linkedPlayers: linked, roundsSinceLastEvent: roundsCounter, nextForcedEvent: null
+            });
         };
 
         function updateThemeAndBanner(data) {
-            document.body.className = data.currentEvent ? `theme-${data.currentEvent.replace('_', '-')}` : '';
-            // Réapplique les classes importantes pour l'orientation
-            checkOrientation();
-            document.body.classList.toggle('is-mobile-game', document.getElementById('screen-mobile-game').classList.contains('active'));
-
+            document.body.className = data.currentEvent ? `theme-${data.currentEvent.replace(/_/g, '-')}` : '';
             const tvBanner = document.getElementById('tv-event-banner');
             const mobileBanner = document.getElementById('mobile-event-banner');
             
@@ -630,7 +565,9 @@
                 if (data.currentEvent === "happy_hour") msg = "🍻 HAPPY HOUR : TOUTES LES GORGÉES SONT DOUBLÉES ! 🍻";
                 if (data.currentEvent === "red_alert") msg = "🚨 ALERTE ROUGE : LA MOINDRE DÉFAITE = CUL SEC ! 🚨";
                 if (data.currentEvent === "green_carpet") msg = "🎰 TAPIS VERT : OBLIGATION DE TIRER JUSQU'À 16 ! 🎰";
-                if (data.currentEvent === "russian_roulette") msg = `☠️ ROULETTE RUSSE : TOUTES VOS GORGÉES GAGNÉES VONT VERS ${data.eventTarget || "?"} ! ☠️`;
+                if (data.currentEvent === "russian_roulette") msg = `☠️ ROULETTE RUSSE : TOUTES VOS GORGÉES GAGNÉES VONT VERS ${data.eventTarget} ! ☠️`;
+                if (data.currentEvent === "infiltre") msg = "🃏 L'INFILTRÉ : LA DEUXIÈME CARTE EST SECRÈTE ET CACHÉE SUR LA TV ! 🃏";
+                if (data.currentEvent === "pacte_de_sang") msg = `🩸 PACTE DE SANG : ${data.linkedPlayers?.[0]} ET ${data.linkedPlayers?.[1]} SONT LIÉS PAR LA VIE ET PAR LE VERRE ! 🩸`;
                 
                 if(tvBanner) { tvBanner.innerText = msg; tvBanner.classList.add('active'); }
                 if(mobileBanner) { mobileBanner.innerText = msg; mobileBanner.classList.add('active'); }
@@ -647,20 +584,43 @@
             
             updateThemeAndBanner(data);
 
+            // GESTIONNAIRE AUDIO AUDIO-CONTEKTE REACTIF
+            let totalCards = (data.dealerHand?.length || 0);
+            let currentBusts = 0;
+            data.players.forEach(p => { 
+                totalCards += (data.playerHands?.[p]?.length || 0); 
+                if (data.playerStates?.[p] === 'bust') currentBusts++;
+            });
+            if (calculateScore(data.dealerHand) > 21) currentBusts++;
+
+            if (window.lastTotalCardsCount !== undefined && totalCards > window.lastTotalCardsCount) { playProceduralSound('deal'); }
+            window.lastTotalCardsCount = totalCards;
+
+            if (window.lastBustsCount !== undefined && currentBusts > window.lastBustsCount) { playProceduralSound('bust'); }
+            window.lastBustsCount = currentBusts;
+
+            if (isDist && window.lastStatusForSound === "playing") {
+                let hasBJ = (data.dealerHand?.length === 2 && calculateScore(data.dealerHand) === 21);
+                data.players.forEach(p => { if (data.playerHands?.[p]?.length === 2 && calculateScore(data.playerHands[p]) === 21) hasBJ = true; });
+                if (hasBJ) playProceduralSound('blackjack');
+            }
+            window.lastStatusForSound = data.status;
+
             const hideSecond = (!isFin && !isDist && !data.dealerPlaying);
             let newDealerCardsHtml = data.dealerHand.map((c, i) => createHtmlCard(c, (hideSecond && i===1), i, data.dealerHand.length)).join('');
             if (newDealerCardsHtml !== lastDealerCardsHtml) { document.getElementById('tv-dealer-cards').innerHTML = newDealerCardsHtml; lastDealerCardsHtml = newDealerCardsHtml; }
             
             if (data.dealerHand && data.dealerHand.length > 0) {
-                document.getElementById('tv-dealer-score').innerText = hideSecond ? `${displayScore([data.dealerHand[0]])} (1 cachée)` : `${displayScore(data.dealerHand)}`;
+                document.getElementById('tv-dealer-score').innerText = hideSecond ? `: ${calculateScore([data.dealerHand[0]])} (1 cachée)` : `: ${calculateScore(data.dealerHand)}`;
             }
 
             let newPlayersAreaHtml = "";
             data.players.forEach((p, index) => {
                 const hand = data.playerHands?.[p]; if (!hand) return; 
                 const state = data.playerStates[p];
-                const isCurrent = (index === data.currentTurnIndex && !isFin && !isDist && !data.dealerPlaying && data.status === "playing");
+                const isCurrent = (index === data.currentTurnIndex && !isFin && !isDist && !data.dealerPlaying);
                 const isTarget = (data.currentEvent === "russian_roulette" && p.replace("_split", "") === data.eventTarget);
+                const isBloodLinked = (data.currentEvent === "pacte_de_sang" && data.linkedPlayers?.includes(p.replace("_split", "")));
                 
                 let stateText = state === 'bust' ? "💥 BRÛLÉ" : state === 'stand' ? "✅ RESTE" : state === 'left' ? "❌ PARTI" : "";
                 if (data.doubled?.[p]) stateText += " (x2)";
@@ -673,12 +633,19 @@
                     else stateText = "🛡️ SAUVÉ";
                 }
 
+                // REGLE DE L'INFILTRÉ : Masquage visuel de la 2ème carte sur la TV
+                let isInfiltreHidden = (data.currentEvent === "infiltre" && !isFin && !isDist);
+                let scoreDisplay = calculateScore(hand);
+                if (isInfiltreHidden) {
+                    scoreDisplay = `${calculateScore([hand[0]])} + ?`;
+                }
+
                 newPlayersAreaHtml += `
-                    <div class="player-mat ${isCurrent ? 'active-turn' : ''} ${['bust', 'left'].includes(state) ? 'bust' : ''} ${isTarget ? 'target' : ''}">
+                    <div class="player-mat ${isCurrent ? 'active-turn' : ''} ${['bust', 'left'].includes(state) ? 'bust' : ''} ${isTarget ? 'target' : ''} ${isBloodLinked ? 'linked-blood' : ''}">
                         <h3>${p.replace("_split", " (Split)")}</h3>
                         <div style="color:var(--gold); font-weight:bold; font-size:0.85em; height:16px; margin-bottom:5px;">${stateText}</div>
-                        <div class="cards-container">${hand.map((c, i) => createHtmlCard(c, false, i, hand.length)).join('')}</div>
-                        <div style="position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#000; padding:4px 15px; border-radius:20px; border:1px solid var(--gold); font-weight:bold; white-space:nowrap;">${displayScore(hand)}</div>
+                        <div class="cards-container">${hand.map((c, i) => createHtmlCard(c, (isInfiltreHidden && i === 1), i, hand.length)).join('')}</div>
+                        <div style="position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#000; padding:4px 15px; border-radius:20px; border:1px solid var(--gold); font-weight:bold;">${scoreDisplay}</div>
                     </div>`;
             });
 
@@ -694,8 +661,7 @@
             document.getElementById('new-round-btn').style.display = isFin ? "inline-block" : "none";
             const msgEl = document.getElementById('tv-result-msg');
             
-            if (data.status === "rolling") { msgEl.innerText = "Tirage au sort en cours... 🎰"; msgEl.style.color = "var(--danger)"; }
-            else if (data.dealerPlaying) { msgEl.innerText = "La banque dévoile son jeu..."; msgEl.style.color = "#fff"; }
+            if (data.dealerPlaying) { msgEl.innerText = "La banque dévoile son jeu..."; msgEl.style.color = "#fff"; }
             else if (isDist) { msgEl.innerText = "Distribution secrète en cours... 🤫"; msgEl.style.color = "#fff"; }
             else if (isFin) { msgEl.innerText = "Fin de manche. 🍻"; msgEl.style.color = "var(--gold)"; }
             else msgEl.innerText = ""; 
@@ -706,19 +672,18 @@
             await updateDoc(doc(db, "rooms", currentRoomCode), { dealerPlaying: true });
 
             let data = localRoomData, dHand = [...data.dealerHand], deck = [...data.deck];
-            
             await new Promise(r => setTimeout(r, 1200));
             
             while(calculateScore(dHand) < 17) {
                 let currentScore = calculateScore(dHand);
                 let delay = currentScore >= 16 ? 2500 : 1200;
+                if (currentScore >= 16) playProceduralSound('suspense'); // Petit coup de pression sonore
                 await new Promise(r => setTimeout(r, delay));
                 dHand.push(deck.pop());
                 await updateDoc(doc(db, "rooms", currentRoomCode), { dealerHand: dHand, deck: deck });
             }
             
             await new Promise(r => setTimeout(r, 1500));
-            
             data = localRoomData;
             
             let dScore = calculateScore(dHand), isDealerBJNatural = (dHand.length === 2 && dScore === 21);
@@ -726,13 +691,11 @@
 
             data.players.forEach(p => { let realP = p.replace("_split", ""); receivedSips[realP] = 0; poolToGive[realP] = 0; });
 
-            let victims = [];
             if (isDealerBJNatural && data.currentEvent !== "russian_roulette") {
                 let activeReals = [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))];
                 if (activeReals.length > 0) { 
                     for(let i=0; i<6; i++) {
                         let randomVictim = activeReals[Math.floor(Math.random() * activeReals.length)]; 
-                        victims.push(randomVictim);
                         receivedSips[randomVictim] += 1; 
                     }
                 }
@@ -745,7 +708,7 @@
                 let pScore = calculateScore(data.playerHands[p]), isPlayerBJNatural = (data.playerHands[p].length === 2 && pScore === 21);
                 let outcome = "", take = 0, give = 0;
                 
-                if (data.playerStates[p] === "bust") { outcome = "bust"; take = 3; }
+                if (data.playerStates[p] === "collab_bust" || data.playerStates[p] === "bust") { outcome = "bust"; take = 3; }
                 else if (pScore === 21 && dScore === 21) { outcome = "bj_both"; take = 3; give = 3; } 
                 else if (isPlayerBJNatural) { outcome = "bj_player"; give = 6; }
                 else if (isDealerBJNatural) { outcome = "bj_dealer"; take = 2; }
@@ -755,7 +718,6 @@
                 else { outcome = "tie"; take = 1; give = 1; }
 
                 if (data.doubled?.[p]) { take *= 2; give *= 2; }
-
                 if (data.currentEvent === "happy_hour") { take *= 2; give *= 2; }
                 if (data.currentEvent === "green_carpet" && isPlayerBJNatural) give = 10;
                 
@@ -764,10 +726,7 @@
 
                 if (data.currentEvent === "russian_roulette") {
                     let realP = p.replace("_split", "");
-                    if (realP !== data.eventTarget) { 
-                        rrTotalGiveToTarget += give; 
-                        give = 0; 
-                    }
+                    if (realP !== data.eventTarget) { rrTotalGiveToTarget += give; give = 0; }
                 }
 
                 let realP = p.replace("_split", "");
@@ -776,8 +735,7 @@
                 if (culSec) realResults[realP].culSec = true;
 
                 if (["bust", "loss", "bj_dealer"].includes(outcome)) streaks[realP] = (streaks[realP] || 0) + 1;
-                else if (["win", "bj_player", "dealer_bust"].includes(outcome)) streaks[realP] = 0;
-                else if (outcome === "tie" || outcome === "bj_both") streaks[realP] = 0; 
+                else if (["win", "bj_player", "dealer_bust", "tie", "bj_both"].includes(outcome)) streaks[realP] = 0;
 
                 results[p] = { outcome, take, give, culSec }; poolToGive[realP] += give;
             });
@@ -787,25 +745,34 @@
                 if (results[data.eventTarget]) results[data.eventTarget].take += rrTotalGiveToTarget;
             }
 
+            // APPLICATION DU PACTE DE SANG : Fusion complète des peines et gains
+            if (data.currentEvent === "pacte_de_sang" && data.linkedPlayers?.length === 2) {
+                let p1 = data.linkedPlayers[0], p2 = data.linkedPlayers[1];
+                let sharedTake = (realResults[p1]?.take || 0) + (realResults[p2]?.take || 0);
+                let sharedGive = (realResults[p1]?.give || 0) + (realResults[p2]?.give || 0);
+                let sharedCulSec = (realResults[p1]?.culSec || false) || (realResults[p2]?.culSec || false);
+
+                if (realResults[p1]) { realResults[p1].take = sharedTake; realResults[p1].give = sharedGive; realResults[p1].culSec = sharedCulSec; }
+                if (realResults[p2]) { realResults[p2].take = sharedTake; realResults[p2].give = sharedGive; realResults[p2].culSec = sharedCulSec; }
+                if (poolToGive[p1] !== undefined) poolToGive[p1] = sharedGive;
+                if (poolToGive[p2] !== undefined) poolToGive[p2] = sharedGive;
+
+                data.players.forEach(p => {
+                    let rp = p.replace("_split", "");
+                    if ((rp === p1 || rp === p2) && results[p]) {
+                        results[p].take = sharedTake; results[p].give = sharedGive; results[p].culSec = sharedCulSec;
+                    }
+                });
+            }
+
             Object.keys(realResults).forEach(realP => {
                 if (streaks[realP] >= 5) { realResults[realP].culSec = true; streaks[realP] = 0; if (results[realP]) results[realP].culSec = true; }
             });
 
-            let finalUpdates = {
-                dealerHand: dHand, deck: deck, dealerPlayed: true, dealerPlaying: false,
+            await updateDoc(doc(db, "rooms", currentRoomCode), {
+                dealerHand: dHand, deck: deck, dealerPlayed: true, dealerPlaying: false, status: "distributing",
                 results, realResults, streaks, poolToGive, receivedSips
-            };
-
-            // Trigger la machine à sous si nécessaire, sinon passe direct en distribution
-            if (victims.length > 0) {
-                finalUpdates.status = "rolling";
-                finalUpdates.rollingType = "dealer_bj";
-                finalUpdates.rollingResults = victims;
-            } else {
-                finalUpdates.status = "distributing";
-            }
-
-            await updateDoc(doc(db, "rooms", currentRoomCode), finalUpdates);
+            });
         }
 
         window.joinRoom = async () => {
@@ -816,37 +783,62 @@
             try {
                 const roomSnap = await getDoc(doc(db, "rooms", currentRoomCode));
                 if (roomSnap.exists()) {
-                    await updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayUnion(myPseudo), [`pings.${myPseudo}`]: Date.now() });
-                    
+                    // SAUVEGARDE EN LOCAL
                     localStorage.setItem("bj_pseudo", myPseudo);
                     localStorage.setItem("bj_room", currentRoomCode);
 
-                    window.showScreen('screen-mobile-lobby');
+                    // AFFICHER LE CODE DIRECTEMENT SUR MOBILE
+                    const mobileRoomCodeEl = document.getElementById('mobile-game-room-code');
+                    if (mobileRoomCodeEl) {
+                        mobileRoomCodeEl.innerText = currentRoomCode;
+                    }
+
+                    await updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayUnion(myPseudo), [`pings.${myPseudo}`]: Date.now() });
                     
-                    onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
-                        localRoomData = docSnap.data();
+                    // Lancement du chargement introductif uniquement lors de la connexion
+                    const loadingPhrases = ["Préparation du tapis...", "Mélange des cartes...", "Vérification des verres...", "Le croupier s'installe..."];
+                    let phraseIdx = 0;
+                    document.getElementById('loading-text').innerText = loadingPhrases[phraseIdx];
+                    window.showScreen('screen-loading');
+
+                    const phraseInterval = setInterval(() => {
+                        const el = document.getElementById('loading-text');
+                        if (el) { phraseIdx = (phraseIdx + 1) % loadingPhrases.length; el.innerText = loadingPhrases[phraseIdx]; }
+                    }, 600);
+
+                    setTimeout(() => {
+                        clearInterval(phraseInterval);
+                        document.getElementById('screen-loading').classList.remove('active');
                         
-                        if (localRoomData.status !== lastStatus) {
-                            if (lastStatus === "playing" && ["distributing", "finished", "rolling"].includes(localRoomData.status)) {
-                                if(localRoomData.status !== "rolling" || localRoomData.rollingType !== "roulette") {
+                        onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
+                            localRoomData = docSnap.data();
+                            
+                            if (localRoomData.status !== lastStatus) {
+                                if (lastStatus === "playing" && ["distributing", "finished"].includes(localRoomData.status)) {
                                     let myOutcome = localRoomData.results?.[myPseudo]?.outcome || "loss";
                                     showRevealScreen(myOutcome);
                                 }
+                                lastStatus = localRoomData.status;
                             }
-                            lastStatus = localRoomData.status;
-                        }
 
-                        if (localRoomData.status === "closed") { 
-                            window.showScreen('screen-disconnected'); 
-                            currentRoomCode = ""; 
-                            localStorage.removeItem("bj_pseudo");
-                            localStorage.removeItem("bj_room");
-                        }
-                        else if (["playing", "distributing", "finished", "rolling"].includes(localRoomData.status)) updateGameMobile();
-                        else { window.showScreen('screen-mobile-lobby'); document.getElementById('mobile-drink-modal').style.display = "none"; document.getElementById('mobile-distrib-modal').style.display = "none"; }
-                    });
+                            if (localRoomData.status === "closed") { window.showScreen('screen-disconnected'); currentRoomCode = ""; }
+                            else if (["playing", "distributing", "finished"].includes(localRoomData.status)) updateGameMobile();
+                            else { window.showScreen('screen-mobile-lobby'); document.getElementById('mobile-drink-modal').style.display = "none"; document.getElementById('mobile-distrib-modal').style.display = "none"; }
+                        });
+                    }, 2500);
+
                 } else document.getElementById('error-msg').innerText = "Session introuvable.";
             } catch (error) { document.getElementById('error-msg').innerText = "Erreur réseau."; }
+        };
+
+        // AUTO-REJOIN SI LES DONNÉES SONT DANS LE LOCALSTORAGE
+        window.onload = () => {
+            const savedPseudo = localStorage.getItem("bj_pseudo");
+            const savedRoom = localStorage.getItem("bj_room");
+            if (savedPseudo && savedRoom) {
+                document.getElementById('input-pseudo').value = savedPseudo;
+                document.getElementById('input-room').value = savedRoom;
+            }
         };
 
         function showRevealScreen(outcome) {
@@ -862,14 +854,8 @@
             } else {
                 title.innerText = "ÉGALITÉ"; title.style.color = "var(--gold)"; icon.innerText = "🤝"; vibrate([200]);
             }
-            
             modal.style.display = "flex";
-            
-            setTimeout(() => {
-                modal.style.display = "none";
-                isRevealing = false;
-                updateGameMobile(); 
-            }, 2500);
+            setTimeout(() => { modal.style.display = "none"; isRevealing = false; updateGameMobile(); }, 2500);
         }
 
         function updateGameMobile() {
@@ -882,20 +868,11 @@
 
             updateThemeAndBanner(data);
 
-            if (data.status === "rolling") {
-                controls.style.display = "none"; drinkModal.style.display = "none"; distribModal.style.display = "none";
-                badge.innerText = "Animation..."; badge.style.borderColor = "var(--danger)";
-                title.innerText = "🎰 Regardez l'écran TV !";
-                document.getElementById('mobile-my-cards').innerHTML = "<div style='font-size: 3em; text-align:center;'>👀📺</div>";
-                document.getElementById('mobile-my-score').innerText = "";
-                return; 
-            }
-
             if (data.status === "playing") { drinkModal.style.display = "none"; distribModal.style.display = "none"; badge.innerText = "En cours"; badge.style.borderColor = "var(--gold)"; }
 
             if (data.dealerHand && data.dealerHand.length > 0) {
                 const hideSecond = (data.status !== "finished" && data.status !== "distributing" && !data.dealerPlaying);
-                document.getElementById('mobile-bank-score').innerText = hideSecond ? `Banque : ${displayScore([data.dealerHand[0]])}` : `Banque : ${displayScore(data.dealerHand)}`;
+                document.getElementById('mobile-bank-score').innerText = hideSecond ? `Banque : ${calculateScore([data.dealerHand[0]])}` : `Banque : ${calculateScore(data.dealerHand)}`;
             }
 
             if (data.status === "distributing") {
@@ -905,7 +882,8 @@
                 if (amountToGive > 0) {
                     vibrate([150, 100, 150]);
                     document.getElementById('distrib-modal-title').innerText = "DISTRIBUTION";
-                    document.getElementById('distrib-modal-text').innerText = `Il vous reste ${amountToGive} gorgée(s) à donner :`;
+                    let pacteTxt = data.currentEvent === "pacte_de_sang" ? " (Pacte Partagé !)" : "";
+                    document.getElementById('distrib-modal-text').innerText = `Il vous reste ${amountToGive} gorgée(s) à distribuer${pacteTxt} :`;
                     
                     let btnContainer = document.getElementById('distrib-buttons-container'); btnContainer.innerHTML = "";
                     [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))].forEach(p => {
@@ -914,7 +892,7 @@
                     distribModal.style.display = "flex";
                 } else {
                     document.getElementById('distrib-modal-title').innerText = "ATTENTE";
-                    document.getElementById('distrib-modal-text').innerText = "Les autres joueurs distribuent leurs gorgées...";
+                    document.getElementById('distrib-modal-text').innerText = "Vos adversaires distribuent leurs faveurs...";
                     document.getElementById('distrib-buttons-container').innerHTML = "";
                     distribModal.style.display = "flex";
                 }
@@ -929,14 +907,15 @@
                 if (totalTake > 0) {
                     vibrate([400]); iconEl.innerText = "🥃";
                     msgText += `<span class="take-color" style="font-size: 26px;">Buvez ${totalTake} gorgée(s) !</span>\n`;
-                    if(received > 0 && res.take > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(${res.take} de la table + ${received} reçues)</small>\n`;
-                    else if (received > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(Les autres joueurs vous ont ciblé !)</small>\n`;
+                    if (data.currentEvent === "pacte_de_sang") msgText += `<span style="color:#ff3366; font-size:14px; font-weight:bold;">(Effet Pacte de Sang incluant votre allié !)</span>\n`;
+                    if (received > 0 && res.take > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(${res.take} de jeu + ${received} ciblées)</small>\n`;
+                    else if (received > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(La table s'est liguée contre vous !)</small>\n`;
                 } else { iconEl.innerText = "👑"; msgText = "Vous êtes sauvé !"; }
 
                 if (res.culSec) {
                     vibrate([400, 200, 400, 200, 800]); iconEl.innerText = "💀";
                     msgTitle = "CUL SEC !";
-                    msgText = `Sanction de la partie.\n\n${msgText}`;
+                    msgText = `Sanction fatale de la manche.\n\n${msgText}`;
                 }
 
                 document.getElementById('drink-modal-title').innerText = msgTitle;
@@ -958,13 +937,12 @@
             if (newMobileCardsHtml !== lastMobileCardsHtml) { document.getElementById('mobile-my-cards').innerHTML = newMobileCardsHtml; lastMobileCardsHtml = newMobileCardsHtml; }
             
             let currentScore = calculateScore(myHand);
-            let currentDisplayScore = displayScore(myHand);
-            document.getElementById('mobile-my-score').innerText = `Score : ${currentDisplayScore} ${displayP.includes("_split") ? "(Split)" : ""}`;
+            document.getElementById('mobile-my-score').innerText = `Score : ${currentScore} ${displayP.includes("_split") ? "(Split)" : ""}`;
 
             if (myState === "bust") { title.innerText = "💥 BRÛLÉ !"; title.style.color = "var(--danger)"; controls.style.display = "none"; badge.innerText = "Perdu"; badge.style.borderColor = "var(--danger)";}
             else if (myState === "stand") { title.innerText = "✅ RESTE"; title.style.color = "var(--gold)"; controls.style.display = "none"; badge.innerText = "En attente"; badge.style.borderColor = "var(--gold)";}
             else if (isMyTurn) {
-                vibrate([80]); title.innerText = "C'est à vous !"; title.style.color = "var(--gold)"; controls.style.display = "grid"; badge.innerText = "Votre Tour"; badge.style.background = "var(--gold)"; badge.style.color = "#000";
+                vibrate([80]); title.innerText = data.currentEvent === "infiltre" ? "C'est votre tour (Bluffez !)" : "C'est à vous !"; title.style.color = "var(--gold)"; controls.style.display = "grid"; badge.innerText = "Votre Tour"; badge.style.background = "var(--gold)"; badge.style.color = "#000";
                 
                 const btnStand = document.getElementById('btn-stand');
                 if (data.currentEvent === "green_carpet" && currentScore < 16) {
@@ -1016,14 +994,6 @@
             newP.splice(newP.indexOf(target) + 1, 0, ghost);
             await updateDoc(doc(db, "rooms", currentRoomCode), { players: newP, deck, [`playerHands.${target}`]: [hand[0], deck.pop()], [`playerHands.${ghost}`]: [hand[1], deck.pop()], [`playerStates.${ghost}`]: "playing", [`pings.${ghost}`]: Date.now() });
         };
-
-        const savedPseudo = localStorage.getItem("bj_pseudo");
-        const savedRoom = localStorage.getItem("bj_room");
-        if (savedPseudo && savedRoom) {
-            document.getElementById('input-pseudo').value = savedPseudo;
-            document.getElementById('input-room').value = savedRoom;
-            window.joinRoom();
-        }
     </script>
 </body>
 </html>
