@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Blackjack - Édition Événements</title>
+    <title>Blackjack - Édition Ultime</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800;900&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -172,16 +172,18 @@
 
 <div id="app-container">
 
+    <!-- ACCUEIL -->
     <div id="screen-home" class="screen active">
         <div class="lobby-box">
             <h1>Blackjack</h1>
-            <div class="prevention" style="margin-bottom: 20px;">Édition Événements</div>
+            <div class="prevention" style="margin-bottom: 20px;">Édition Ultime</div>
             <h2>Ouverture de la Table</h2>
             <button class="btn btn-main" onclick="window.initTVMode()">📺 Banque (Écran TV)</button>
             <button class="btn btn-sub" onclick="window.showScreen('screen-join')">📱 Joueur (Smartphone)</button>
         </div>
     </div>
 
+    <!-- REJOINDRE -->
     <div id="screen-join" class="screen">
         <div class="lobby-box">
             <h2>Rejoindre</h2>
@@ -193,6 +195,7 @@
         </div>
     </div>
 
+    <!-- LOBBY MOBILE -->
     <div id="screen-mobile-lobby" class="screen">
         <div class="lobby-box">
             <div style="font-size: 3em; margin-bottom: 5px;">🥃</div>
@@ -201,6 +204,7 @@
         </div>
     </div>
 
+    <!-- DECO -->
     <div id="screen-disconnected" class="screen">
         <div class="lobby-box" style="border-color: var(--danger);">
             <h2 style="color: var(--danger);">🚨 Table Fermée</h2>
@@ -209,6 +213,7 @@
         </div>
     </div>
 
+    <!-- LOBBY TV -->
     <div id="screen-tv-lobby" class="screen">
         <div class="lobby-box" style="max-width: 800px;">
             <h2>CODE D'ACCÈS VIP</h2>
@@ -219,8 +224,10 @@
         </div>
     </div>
 
+    <!-- JEU TV -->
     <div id="screen-tv-game" class="screen">
         <div class="tv-top-bar">
+            <!-- ADMIN BOUTONS POUR FORCER LES EVENEMENTS -->
             <div class="admin-controls" id="tv-admin-controls" style="display:none;">
                 <button class="btn-admin" onclick="forceEvent('happy_hour')">X2</button>
                 <button class="btn-admin" onclick="forceEvent('red_alert')">Mort</button>
@@ -244,6 +251,7 @@
         <button id="new-round-btn" class="btn btn-main" style="display:none; font-size: 1em; padding: 12px 25px; margin-top: 10px; max-width: 300px;" onclick="window.startGame()">Manche Suivante 🔄</button>
     </div>
 
+    <!-- JEU MOBILE -->
     <div id="screen-mobile-game" class="screen">
         <div class="lobby-box" style="padding: 15px; width: 100%; border: none; background: transparent; box-shadow: none;">
             <div id="mobile-event-banner" class="event-banner" style="font-size: 0.85em; margin-bottom: 10px;"></div>
@@ -268,12 +276,20 @@
         </div>
     </div>
 
+    <!-- MODAL REVEAL FLASH (MOBILE) -->
+    <div id="mobile-reveal-modal" class="fullscreen-modal" style="z-index: 2000;">
+        <div id="reveal-icon" style="font-size: 5em; margin-bottom: 10px; animation: popIn 0.3s ease-out;"></div>
+        <h1 id="reveal-title" style="font-size: 3em; margin: 0; text-transform: uppercase; font-family: 'Playfair Display', serif; animation: popIn 0.4s ease-out;"></h1>
+    </div>
+
+    <!-- MODAL DISTRIBUTION (MOBILE) -->
     <div id="mobile-distrib-modal" class="fullscreen-modal">
         <h2 id="distrib-modal-title" class="modal-title"></h2>
         <p id="distrib-modal-text" class="modal-text"></p>
         <div style="width: 100%; max-width: 300px;" id="distrib-buttons-container"></div>
     </div>
 
+    <!-- MODAL RÉSULTAT (MOBILE) -->
     <div id="mobile-drink-modal" class="fullscreen-modal">
         <div style="font-size: 4em; margin-bottom: 5px;" id="drink-modal-icon">🍷</div>
         <h2 id="drink-modal-title" class="modal-title">VERDICT</h2>
@@ -305,6 +321,8 @@
         let localRoomData = null;
 
         let lastLobbyPlayersHtml = "", lastDealerCardsHtml = "", lastPlayersAreaHtml = "", lastMobileCardsHtml = "";
+        let isRevealing = false;
+        let lastStatus = "waiting";
 
         const vibrate = (pattern) => { if (navigator.vibrate) navigator.vibrate(pattern); };
 
@@ -398,7 +416,7 @@
         window.forceEvent = async (eventName) => {
             if (!currentRoomCode || !isTV) return;
             await updateDoc(doc(db, "rooms", currentRoomCode), { nextForcedEvent: eventName });
-            alert(eventName ? `Événement ${eventName} forcé pour la prochaine manche.` : "Partie normale (sans événement) forcée pour la prochaine manche.");
+            alert(eventName ? `Événement ${eventName} forcé pour la prochaine manche.` : "Partie normale forcée pour la prochaine manche.");
         };
 
         function updateLobbyTV() {
@@ -412,12 +430,11 @@
             const now = Date.now();
             let activePlayers = localRoomData.players.filter(p => !p.includes("_split") && localRoomData.playerStates?.[p] !== "left" && (now - (localRoomData.pings?.[p] || now) < 25000));
 
-            // GESTION DES ÉVÉNEMENTS
             let nextEvt = localRoomData.nextForcedEvent || null;
             let roundsCounter = (localRoomData.roundsSinceLastEvent || 0) + 1;
             
             if (nextEvt === null && roundsCounter >= 10) {
-                if (Math.random() < 0.25) { // 25% de chance si on a dépassé les 10 manches
+                if (Math.random() < 0.25) {
                     const evts = ["happy_hour", "red_alert", "green_carpet", "russian_roulette"];
                     nextEvt = evts[Math.floor(Math.random() * evts.length)];
                 }
@@ -440,8 +457,8 @@
 
             await updateDoc(doc(db, "rooms", currentRoomCode), {
                 players: activePlayers, status: "playing", deck, playerHands, playerStates, 
-                dealerHand: [deck.pop(), deck.pop()], currentTurnIndex: 0, dealerPlayed: false,
-                results: {}, realResults: {}, randomVictim: null, poolToGive: {}, receivedSips: {}, doubled: {},
+                dealerHand: [deck.pop(), deck.pop()], currentTurnIndex: 0, dealerPlayed: false, dealerPlaying: false,
+                results: {}, realResults: {}, poolToGive: {}, receivedSips: {}, doubled: {},
                 currentEvent: nextEvt, eventTarget: target, roundsSinceLastEvent: roundsCounter, nextForcedEvent: null
             });
         };
@@ -456,7 +473,7 @@
                 if (data.currentEvent === "happy_hour") msg = "🍻 HAPPY HOUR : TOUTES LES GORGÉES SONT DOUBLÉES ! 🍻";
                 if (data.currentEvent === "red_alert") msg = "🚨 ALERTE ROUGE : LA MOINDRE DÉFAITE = CUL SEC ! 🚨";
                 if (data.currentEvent === "green_carpet") msg = "🎰 TAPIS VERT : OBLIGATION DE TIRER JUSQU'À 16 ! 🎰";
-                if (data.currentEvent === "russian_roulette") msg = `☠️ ROULETTE RUSSE : ${data.eventTarget} SUBIRA TOUTES VOS DÉFAITES ! ☠️`;
+                if (data.currentEvent === "russian_roulette") msg = `☠️ ROULETTE RUSSE : TOUTES VOS GORGÉES GAGNÉES VONT VERS ${data.eventTarget} ! ☠️`;
                 
                 if(tvBanner) { tvBanner.innerText = msg; tvBanner.classList.add('active'); }
                 if(mobileBanner) { mobileBanner.innerText = msg; mobileBanner.classList.add('active'); }
@@ -473,11 +490,11 @@
             
             updateThemeAndBanner(data);
 
-            let newDealerCardsHtml = data.dealerHand.map((c, i) => createHtmlCard(c, (!isFin && !isDist && i===1), i, data.dealerHand.length)).join('');
+            const hideSecond = (!isFin && !isDist && !data.dealerPlaying);
+            let newDealerCardsHtml = data.dealerHand.map((c, i) => createHtmlCard(c, (hideSecond && i===1), i, data.dealerHand.length)).join('');
             if (newDealerCardsHtml !== lastDealerCardsHtml) { document.getElementById('tv-dealer-cards').innerHTML = newDealerCardsHtml; lastDealerCardsHtml = newDealerCardsHtml; }
             
             if (data.dealerHand && data.dealerHand.length > 0) {
-                const hideSecond = (!isFin && !isDist);
                 document.getElementById('tv-dealer-score').innerText = hideSecond ? `: ${calculateScore([data.dealerHand[0]])} (1 cachée)` : `: ${calculateScore(data.dealerHand)}`;
             }
 
@@ -485,7 +502,7 @@
             data.players.forEach((p, index) => {
                 const hand = data.playerHands?.[p]; if (!hand) return; 
                 const state = data.playerStates[p];
-                const isCurrent = (index === data.currentTurnIndex && !isFin && !isDist);
+                const isCurrent = (index === data.currentTurnIndex && !isFin && !isDist && !data.dealerPlaying);
                 const isTarget = (data.currentEvent === "russian_roulette" && p.replace("_split", "") === data.eventTarget);
                 
                 let stateText = state === 'bust' ? "💥 BRÛLÉ" : state === 'stand' ? "✅ RESTE" : state === 'left' ? "❌ PARTI" : "";
@@ -513,46 +530,66 @@
             if (data.status === "playing" && data.currentTurnIndex < data.players.length) {
                 let curr = data.players[data.currentTurnIndex];
                 if (!data.playerHands?.[curr] || data.playerStates[curr] === "left") { updateDoc(doc(db, "rooms", currentRoomCode), { currentTurnIndex: data.currentTurnIndex + 1 }); return; }
-            } else if (data.status === "playing" && !data.dealerPlayed) playDealerTurn();
+            } else if (data.status === "playing" && !data.dealerPlayed && !data.dealerPlaying) playDealerTurn();
 
             if (isDist && data.poolToGive && Object.values(data.poolToGive).reduce((a,b)=>a+b, 0) === 0) { await updateDoc(doc(db, "rooms", currentRoomCode), { status: "finished" }); return; }
 
             document.getElementById('new-round-btn').style.display = isFin ? "inline-block" : "none";
             const msgEl = document.getElementById('tv-result-msg');
             
-            if (isDist) { msgEl.innerText = "Distribution secrète en cours... 🤫"; msgEl.style.color = "#fff"; }
-            else if (isFin) {
-                if (data.dealerHand.length === 2 && calculateScore(data.dealerHand) === 21 && data.randomVictim && data.currentEvent !== "russian_roulette") {
-                    msgEl.innerText = `🔥 BLACKJACK DU CROUPIER ! ${data.randomVictim} prend 6 gorgées !`; msgEl.style.color = "var(--danger)";
-                } else { msgEl.innerText = "Fin de manche. 🍻"; msgEl.style.color = "var(--gold)"; }
-            } else msgEl.innerText = ""; 
+            if (data.dealerPlaying) { msgEl.innerText = "La banque dévoile son jeu..."; msgEl.style.color = "#fff"; }
+            else if (isDist) { msgEl.innerText = "Distribution secrète en cours... 🤫"; msgEl.style.color = "#fff"; }
+            else if (isFin) { msgEl.innerText = "Fin de manche. 🍻"; msgEl.style.color = "var(--gold)"; }
+            else msgEl.innerText = ""; 
         }
 
         async function playDealerTurn() {
+            if (localRoomData.dealerPlaying) return;
+            await updateDoc(doc(db, "rooms", currentRoomCode), { dealerPlaying: true });
+
             let data = localRoomData, dHand = [...data.dealerHand], deck = [...data.deck];
-            while(calculateScore(dHand) < 17) dHand.push(deck.pop());
             
-            let dScore = calculateScore(dHand), isDealerBJ = (dHand.length === 2 && dScore === 21);
-            let results = {}, realResults = {}, streaks = data.streaks || {}, poolToGive = {}, receivedSips = {}, randomVictim = null;
+            await new Promise(r => setTimeout(r, 1200));
+            
+            while(calculateScore(dHand) < 17) {
+                let currentScore = calculateScore(dHand);
+                let delay = currentScore >= 16 ? 2500 : 1200;
+                await new Promise(r => setTimeout(r, delay));
+                dHand.push(deck.pop());
+                await updateDoc(doc(db, "rooms", currentRoomCode), { dealerHand: dHand, deck: deck });
+            }
+            
+            await new Promise(r => setTimeout(r, 1500));
+            
+            // Re-fetch des données fraiches pour les calculs de fin
+            data = localRoomData;
+            
+            let dScore = calculateScore(dHand), isDealerBJNatural = (dHand.length === 2 && dScore === 21);
+            let results = {}, realResults = {}, streaks = data.streaks || {}, poolToGive = {}, receivedSips = {};
 
             data.players.forEach(p => { let realP = p.replace("_split", ""); receivedSips[realP] = 0; poolToGive[realP] = 0; });
 
-            if (isDealerBJ && data.currentEvent !== "russian_roulette") {
+            if (isDealerBJNatural && data.currentEvent !== "russian_roulette") {
                 let activeReals = [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))];
-                if (activeReals.length > 0) { randomVictim = activeReals[Math.floor(Math.random() * activeReals.length)]; receivedSips[randomVictim] += 6; }
+                if (activeReals.length > 0) { 
+                    for(let i=0; i<6; i++) {
+                        let randomVictim = activeReals[Math.floor(Math.random() * activeReals.length)]; 
+                        receivedSips[randomVictim] += 1; 
+                    }
+                }
             }
 
-            let rrTotalTake = 0;
+            let rrTotalGiveToTarget = 0;
 
             data.players.forEach(p => {
                 if (data.playerStates[p] === "left" || !data.playerHands[p]) return;
-                let pScore = calculateScore(data.playerHands[p]), isPlayerBJ = (data.playerHands[p].length === 2 && pScore === 21);
+                let pScore = calculateScore(data.playerHands[p]), isPlayerBJNatural = (data.playerHands[p].length === 2 && pScore === 21);
                 let outcome = "", take = 0, give = 0;
                 
                 if (data.playerStates[p] === "bust") { outcome = "bust"; take = 3; }
-                else if (isDealerBJ && isPlayerBJ) { outcome = "bj_both"; take = 3; give = 3; }
-                else if (isPlayerBJ) { outcome = "bj_player"; give = 6; }
-                else if (isDealerBJ) { outcome = "bj_dealer"; take = 2; }
+                else if (pScore === 21 && dScore === 21) { outcome = "bj_both"; take = 3; give = 3; } // NOUVELLE REGLE EGALITE 21
+                else if (isPlayerBJNatural) { outcome = "bj_player"; give = 6; }
+                else if (isDealerBJNatural) { outcome = "bj_dealer"; take = 2; }
                 else if (dScore > 21) { outcome = "dealer_bust"; give = 1; }
                 else if (pScore > dScore) { outcome = "win"; give = 2; }
                 else if (pScore < dScore) { outcome = "loss"; take = 2; }
@@ -560,17 +597,18 @@
 
                 if (data.doubled?.[p]) { take *= 2; give *= 2; }
 
-                // MODIFICATEURS D'EVENEMENTS
                 if (data.currentEvent === "happy_hour") { take *= 2; give *= 2; }
-                if (data.currentEvent === "green_carpet" && isPlayerBJ) give = 10;
+                if (data.currentEvent === "green_carpet" && isPlayerBJNatural) give = 10;
                 
                 let culSec = false;
                 if (data.currentEvent === "red_alert" && ["bust", "loss", "bj_dealer"].includes(outcome)) culSec = true;
 
                 if (data.currentEvent === "russian_roulette") {
                     let realP = p.replace("_split", "");
-                    if (realP !== data.eventTarget) { rrTotalTake += take; take = 0;} 
-                    else if (["win", "bj_player", "dealer_bust"].includes(outcome)) give *= 2;
+                    if (realP !== data.eventTarget) { 
+                        rrTotalGiveToTarget += give; // Les gorgées gagnées vont au target
+                        give = 0; 
+                    }
                 }
 
                 let realP = p.replace("_split", "");
@@ -585,10 +623,9 @@
                 results[p] = { outcome, take, give, culSec }; poolToGive[realP] += give;
             });
 
-            // Applique les malus Roulette Russe
             if (data.currentEvent === "russian_roulette" && data.eventTarget && realResults[data.eventTarget]) {
-                realResults[data.eventTarget].take += rrTotalTake;
-                if (results[data.eventTarget]) results[data.eventTarget].take += rrTotalTake;
+                realResults[data.eventTarget].take += rrTotalGiveToTarget;
+                if (results[data.eventTarget]) results[data.eventTarget].take += rrTotalGiveToTarget;
             }
 
             Object.keys(realResults).forEach(realP => {
@@ -596,8 +633,8 @@
             });
 
             await updateDoc(doc(db, "rooms", currentRoomCode), {
-                dealerHand: dHand, deck: deck, dealerPlayed: true, status: "distributing",
-                results, realResults, streaks, randomVictim, poolToGive, receivedSips
+                dealerHand: dHand, deck: deck, dealerPlayed: true, dealerPlaying: false, status: "distributing",
+                results, realResults, streaks, poolToGive, receivedSips
             });
         }
 
@@ -614,6 +651,16 @@
                     
                     onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
                         localRoomData = docSnap.data();
+                        
+                        // Déclencheur pour l'écran de révélation
+                        if (localRoomData.status !== lastStatus) {
+                            if (lastStatus === "playing" && ["distributing", "finished"].includes(localRoomData.status)) {
+                                let myOutcome = localRoomData.results?.[myPseudo]?.outcome || "loss";
+                                showRevealScreen(myOutcome);
+                            }
+                            lastStatus = localRoomData.status;
+                        }
+
                         if (localRoomData.status === "closed") { window.showScreen('screen-disconnected'); currentRoomCode = ""; }
                         else if (["playing", "distributing", "finished"].includes(localRoomData.status)) updateGameMobile();
                         else { window.showScreen('screen-mobile-lobby'); document.getElementById('mobile-drink-modal').style.display = "none"; document.getElementById('mobile-distrib-modal').style.display = "none"; }
@@ -622,8 +669,31 @@
             } catch (error) { document.getElementById('error-msg').innerText = "Erreur réseau."; }
         };
 
+        function showRevealScreen(outcome) {
+            isRevealing = true;
+            const modal = document.getElementById('mobile-reveal-modal');
+            const title = document.getElementById('reveal-title');
+            const icon = document.getElementById('reveal-icon');
+            
+            if(["win", "bj_player", "dealer_bust"].includes(outcome)) {
+                title.innerText = "VICTOIRE"; title.style.color = "var(--success)"; icon.innerText = "🎉"; vibrate([100, 100, 100]);
+            } else if(["loss", "bust", "bj_dealer"].includes(outcome)) {
+                title.innerText = "DÉFAITE"; title.style.color = "var(--danger)"; icon.innerText = "💀"; vibrate([400, 200, 400]);
+            } else {
+                title.innerText = "ÉGALITÉ"; title.style.color = "var(--gold)"; icon.innerText = "🤝"; vibrate([200]);
+            }
+            
+            modal.style.display = "flex";
+            
+            setTimeout(() => {
+                modal.style.display = "none";
+                isRevealing = false;
+                updateGameMobile(); 
+            }, 2500);
+        }
+
         function updateGameMobile() {
-            if (!currentRoomCode) return; 
+            if (!currentRoomCode || isRevealing) return; 
             window.showScreen('screen-mobile-game');
             const data = localRoomData;
             const title = document.getElementById('mobile-status-title'), controls = document.getElementById('mobile-controls');
@@ -635,7 +705,7 @@
             if (data.status === "playing") { drinkModal.style.display = "none"; distribModal.style.display = "none"; badge.innerText = "En cours"; badge.style.borderColor = "var(--gold)"; }
 
             if (data.dealerHand && data.dealerHand.length > 0) {
-                const hideSecond = (data.status !== "finished" && data.status !== "distributing");
+                const hideSecond = (data.status !== "finished" && data.status !== "distributing" && !data.dealerPlaying);
                 document.getElementById('mobile-bank-score').innerText = hideSecond ? `Banque : ${calculateScore([data.dealerHand[0]])}` : `Banque : ${calculateScore(data.dealerHand)}`;
             }
 
@@ -670,14 +740,14 @@
                 if (totalTake > 0) {
                     vibrate([400]); iconEl.innerText = "🥃";
                     msgText += `<span class="take-color" style="font-size: 26px;">Buvez ${totalTake} gorgée(s) !</span>\n`;
-                    if(received > 0 && res.take > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(${res.take} du croupier + ${received} d'un joueur)</small>\n`;
-                    else if (received > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(Vous avez été ciblé !)</small>\n`;
+                    if(received > 0 && res.take > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(${res.take} de la table + ${received} reçues)</small>\n`;
+                    else if (received > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(Les autres joueurs vous ont ciblé !)</small>\n`;
                 } else { iconEl.innerText = "👑"; msgText = "Vous êtes sauvé !"; }
 
                 if (res.culSec) {
                     vibrate([400, 200, 400, 200, 800]); iconEl.innerText = "💀";
                     msgTitle = "CUL SEC !";
-                    msgText = `5 défaites d'affilée.\n\n${msgText}`;
+                    msgText = `Sanction de la partie.\n\n${msgText}`;
                 }
 
                 document.getElementById('drink-modal-title').innerText = msgTitle;
