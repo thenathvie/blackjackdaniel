@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Version 3.1 (Sécurité & Déconnexions)</title>
+    <title>Blackjack Alcool - Version 3.2</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -16,7 +16,7 @@
         .prevention { font-size: 0.9em; color: #ffcccc; margin-bottom: 20px; font-style: italic; }
         
         /* Écrans */
-        .screen { display: none; margin: 0 auto; }
+        .screen { display: none; margin: 0 auto; position: relative; }
         .screen.active { display: block; }
         .lobby-box { max-width: 600px; background-color: rgba(0, 0, 0, 0.3); padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin: 0 auto; }
         
@@ -28,17 +28,16 @@
         .btn-sub:hover { background-color: #0b7dda; }
         .btn-hit { background-color: #f44336; color: white; width: 100%; max-width: 200px; font-size: 24px; padding: 20px;}
         .btn-stand { background-color: #4CAF50; color: white; width: 100%; max-width: 200px; font-size: 24px; padding: 20px;}
-        .btn:disabled { background-color: #ccc !important; cursor: not-allowed; }
         
         input { padding: 12px; font-size: 18px; border-radius: 8px; border: 2px solid #ccc; margin: 10px 0; width: 80%; max-width: 300px; text-align: center; text-transform: uppercase; }
         
-        /* Lobby */
+        /* Lobby & TV */
         .room-code { font-size: 48px; font-weight: bold; color: #ffb703; letter-spacing: 5px; margin: 20px 0; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; display: inline-block; }
+        .small-room-code { position: absolute; top: 0px; right: 20px; font-size: 20px; font-weight: bold; background: rgba(0,0,0,0.5); padding: 10px 15px; border-radius: 8px; color: #ffb703; }
         .player-list { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
         .player-badge { background-color: #023e8a; padding: 10px 20px; border-radius: 20px; font-size: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
 
-        /* Plateau de jeu (TV) */
-        #tv-board { display: flex; flex-direction: column; gap: 20px; }
+        #tv-board { display: flex; flex-direction: column; gap: 20px; margin-top: 40px; }
         .dealer-area { background-color: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; }
         .players-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
         .player-mat { background-color: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 200px; border: 3px solid transparent; }
@@ -89,6 +88,7 @@
     </div>
 
     <div id="screen-tv-game" class="screen">
+        <div class="small-room-code">Code: <span id="tv-game-room-code"></span></div>
         <div id="tv-board">
             <div class="dealer-area">
                 <h2>Croupier <span id="tv-dealer-score"></span></h2>
@@ -136,6 +136,7 @@
 
         function calculateScore(hand) {
             let score = 0; let aces = 0;
+            if(!hand) return 0;
             for (let card of hand) {
                 if (['J', 'Q', 'K'].includes(card.value)) score += 10;
                 else if (card.value === 'A') { aces += 1; score += 11; }
@@ -158,25 +159,31 @@
         };
 
         // ==========================================
-        // DÉCONNEXIONS ET INACTIVITÉ
+        // DÉCONNEXIONS ET INACTIVITÉ (15s)
         // ==========================================
 
-        // 1. Fermeture brutale de l'onglet (TV ou Joueur)
         window.addEventListener('beforeunload', () => {
             if (currentRoomCode) {
                 if (isTV) {
+                    // La TV ferme : Le croupier s'en va
                     updateDoc(doc(db, "rooms", currentRoomCode), { status: "closed" }).catch(()=>{});
                 } else if (myPseudo && localRoomData) {
                     if (localRoomData.status === "waiting") {
+                        // Départ instantané du lobby
                         updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayRemove(myPseudo) }).catch(()=>{});
                     } else if (localRoomData.status === "playing") {
-                        updateDoc(doc(db, "rooms", currentRoomCode), { [`playerStates.${myPseudo}`]: "left" }).catch(()=>{});
+                        // Le joueur quitte en pleine partie : On force la fin de son tour
+                        let updates = { [`playerStates.${myPseudo}`]: "stand" };
+                        if (localRoomData.players[localRoomData.currentTurnIndex] === myPseudo) {
+                            updates.currentTurnIndex = localRoomData.currentTurnIndex + 1;
+                        }
+                        updateDoc(doc(db, "rooms", currentRoomCode), updates).catch(()=>{});
                     }
                 }
             }
         });
 
-        // 2. Ping mobile (toutes les 5 secondes)
+        // Ping mobile (toutes les 5 secondes)
         setInterval(() => {
             if (!isTV && myPseudo && currentRoomCode && localRoomData && localRoomData.status !== "closed") {
                 updateDoc(doc(db, "rooms", currentRoomCode), {
@@ -185,7 +192,7 @@
             }
         }, 5000);
 
-        // 3. Moniteur TV (Vérifie les joueurs inactifs)
+        // Moniteur TV (Vérifie l'inactivité toutes les 3s pour réagir vite aux 15s)
         setInterval(async () => {
             if (isTV && currentRoomCode && localRoomData && localRoomData.status !== "closed") {
                 const now = Date.now();
@@ -196,12 +203,18 @@
                     const lastPing = localRoomData.pings?.[p] || now;
                     const state = localRoomData.playerStates?.[p];
                     
-                    if (now - lastPing > 30000 && state !== "left") {
-                        modified = true;
+                    // Inactivité de 15 secondes
+                    if (now - lastPing > 15000) {
                         if (localRoomData.status === "waiting") {
                             updates.players = arrayRemove(p); // Retire du lobby
-                        } else if (localRoomData.status === "playing") {
-                            updates[`playerStates.${p}`] = "left"; // Marque comme abandonné en jeu
+                            modified = true;
+                        } else if (localRoomData.status === "playing" && state === "playing") {
+                            // Le joueur met trop de temps : on force le "STAND"
+                            updates[`playerStates.${p}`] = "stand";
+                            if (localRoomData.players[localRoomData.currentTurnIndex] === p) {
+                                updates.currentTurnIndex = localRoomData.currentTurnIndex + 1; // Passe au suivant
+                            }
+                            modified = true;
                         }
                     }
                 });
@@ -210,7 +223,7 @@
                     try { await updateDoc(doc(db, "rooms", currentRoomCode), updates); } catch(e){}
                 }
             }
-        }, 5000);
+        }, 3000);
 
 
         // ==========================================
@@ -224,6 +237,7 @@
             
             await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [], pings: {} });
             document.getElementById('display-room-code').innerText = currentRoomCode;
+            document.getElementById('tv-game-room-code').innerText = currentRoomCode; // Affichage en jeu
             window.showScreen('screen-tv-lobby');
 
             onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
@@ -252,6 +266,7 @@
 
             let playerHands = {};
             let playerStates = {};
+            // Génère les mains pour tous les joueurs présents à cet instant T
             localRoomData.players.forEach(p => {
                 playerHands[p] = [deck.pop(), deck.pop()];
                 playerStates[p] = "playing"; 
@@ -268,23 +283,24 @@
             const data = localRoomData;
             const isFinished = data.status === "finished";
             
-            // Affichage dealer
             let dealerCardsHtml = "";
             data.dealerHand.forEach((c, i) => { dealerCardsHtml += createHtmlCard(c, (!isFinished && i===1)); });
             document.getElementById('tv-dealer-cards').innerHTML = dealerCardsHtml;
             document.getElementById('tv-dealer-score').innerText = isFinished ? `- Score: ${calculateScore(data.dealerHand)}` : "";
 
-            // Affichage joueurs
             const playersArea = document.getElementById('tv-players-area');
             playersArea.innerHTML = "";
+            
             data.players.forEach((p, index) => {
-                const hand = data.playerHands[p];
+                const hand = data.playerHands?.[p];
+                if (!hand) return; // Ignore un joueur qui vient de rejoindre mid-game (il jouera la manche suivante)
+
                 const state = data.playerStates[p];
                 const isCurrentTurn = (index === data.currentTurnIndex && !isFinished);
                 
                 let cardsHtml = hand.map(c => createHtmlCard(c)).join('');
-                let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : state === 'left' ? "❌ DÉCONNECTÉ" : "";
-                let matClass = `player-mat ${isCurrentTurn ? 'active-turn' : ''} ${state === 'bust' || state === 'left' ? 'bust' : ''}`;
+                let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : "";
+                let matClass = `player-mat ${isCurrentTurn ? 'active-turn' : ''} ${state === 'bust' ? 'bust' : ''}`;
                 
                 playersArea.innerHTML += `
                     <div class="${matClass}">
@@ -294,19 +310,18 @@
                     </div>`;
             });
 
-            // Gérer le passage de tour si le joueur actuel a quitté
+            // Avance le tour si le joueur actuel n'a pas de main (rejoint mid-game) ou a quitté
             if (data.currentTurnIndex < data.players.length) {
                 let currentPlayer = data.players[data.currentTurnIndex];
-                if (data.playerStates[currentPlayer] === "left") {
-                    updateDoc(doc(db, "rooms", currentRoomCode), { currentTurnIndex: data.currentTurnIndex + 1 });
+                if (!data.playerHands?.[currentPlayer] || data.playerStates[currentPlayer] === "stand" || data.playerStates[currentPlayer] === "bust") {
+                    // Le passage automatique gère le skip si le state change côté serveur
                 }
             } 
-            // Gérer le tour automatique du Croupier
+            // Croupier joue
             else if (data.status === "playing" && !data.dealerPlayed) {
                 playDealerTurn();
             }
 
-            // Bouton de fin
             document.getElementById('new-round-btn').style.display = isFinished ? "inline-block" : "none";
             if(isFinished) document.getElementById('tv-result-msg').innerText = "Manche terminée ! Préparez-vous à boire...";
             else document.getElementById('tv-result-msg').innerText = "";
@@ -342,15 +357,9 @@
                     onSnapshot(roomRef, (docSnap) => {
                         localRoomData = docSnap.data();
                         
-                        // Sécurité: Si la table est fermée par le croupier
+                        // Message drôle si le croupier ferme la page
                         if (localRoomData.status === "closed") {
-                            alert("Le croupier a fermé la table.");
-                            window.location.reload();
-                            return;
-                        }
-                        // Sécurité: Si le joueur a été viré pour inactivité
-                        if (localRoomData.playerStates && localRoomData.playerStates[myPseudo] === "left") {
-                            alert("Tu as été déconnecté pour inactivité (30s).");
+                            alert("🚨 Le croupier est parti vomir (ou prendre une pause) ! La table ferme ses portes.");
                             window.location.reload();
                             return;
                         }
@@ -365,16 +374,27 @@
         function updateGameMobile() {
             window.showScreen('screen-mobile-game');
             const data = localRoomData;
+            
+            const title = document.getElementById('mobile-status-title');
+            const controls = document.getElementById('mobile-controls');
+
+            // Gérer les joueurs qui rejoignent en pleine manche
+            const myHand = data.playerHands?.[myPseudo];
+            if (!myHand) {
+                title.innerText = "⏳ Manche en cours... Tu joueras à la prochaine !";
+                title.style.color = "white";
+                controls.style.display = "none";
+                document.getElementById('mobile-my-cards').innerHTML = "";
+                document.getElementById('mobile-my-score').innerText = "";
+                return;
+            }
+
             const currentPlayer = data.players[data.currentTurnIndex];
             const isMyTurn = (currentPlayer === myPseudo && data.status === "playing");
             const myState = data.playerStates[myPseudo];
 
-            const myHand = data.playerHands[myPseudo];
             document.getElementById('mobile-my-cards').innerHTML = myHand.map(c => createHtmlCard(c)).join('');
             document.getElementById('mobile-my-score').innerText = `Mon Score : ${calculateScore(myHand)}`;
-
-            const title = document.getElementById('mobile-status-title');
-            const controls = document.getElementById('mobile-controls');
 
             if (data.status === "finished") {
                 title.innerText = "Fin de la manche ! Regarde la TV";
@@ -393,7 +413,7 @@
                 title.style.color = "#ffb703";
                 controls.style.display = "flex";
             } else {
-                title.innerText = `⏳ En attente de ${currentPlayer}...`;
+                title.innerText = `⏳ En attente de ${currentPlayer || "Croupier"}...`;
                 title.style.color = "white";
                 controls.style.display = "none";
             }
