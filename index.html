@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Version 2 (Lobby)</title>
+    <title>Blackjack Alcool - Version 3 (Multi-écrans)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,96 +13,46 @@
             margin: 0;
             padding: 20px;
         }
-        .prevention {
-            font-size: 0.9em;
-            color: #ffcccc;
-            margin-bottom: 20px;
-            font-style: italic;
-        }
-        .screen {
-            display: none;
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-        }
-        .active {
-            display: block;
-        }
-        h1, h2 {
-            margin-top: 0;
-        }
-        .btn {
-            padding: 12px 24px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            border-radius: 8px;
-            margin: 10px;
-            transition: background 0.2s;
-        }
+        .prevention { font-size: 0.9em; color: #ffcccc; margin-bottom: 20px; font-style: italic; }
+        
+        /* Écrans */
+        .screen { display: none; margin: 0 auto; }
+        .screen.active { display: block; }
+        .lobby-box { max-width: 600px; background-color: rgba(0, 0, 0, 0.3); padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin: 0 auto; }
+        
+        /* Boutons et inputs */
+        .btn { padding: 12px 24px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; margin: 10px; transition: 0.2s; }
         .btn-main { background-color: #ffb703; color: black; }
         .btn-main:hover { background-color: #fb8500; }
         .btn-sub { background-color: #2196F3; color: white; }
         .btn-sub:hover { background-color: #0b7dda; }
+        .btn-hit { background-color: #f44336; color: white; width: 100%; max-width: 200px; font-size: 24px; padding: 20px;}
+        .btn-stand { background-color: #4CAF50; color: white; width: 100%; max-width: 200px; font-size: 24px; padding: 20px;}
+        .btn:disabled { background-color: #ccc !important; cursor: not-allowed; }
         
-        input {
-            padding: 12px;
-            font-size: 18px;
-            border-radius: 8px;
-            border: 2px solid #ccc;
-            margin: 10px 0;
-            width: 80%;
-            max-width: 300px;
-            text-align: center;
-            text-transform: uppercase;
-        }
+        input { padding: 12px; font-size: 18px; border-radius: 8px; border: 2px solid #ccc; margin: 10px 0; width: 80%; max-width: 300px; text-align: center; text-transform: uppercase; }
         
-        .room-code {
-            font-size: 48px;
-            font-weight: bold;
-            color: #ffb703;
-            letter-spacing: 5px;
-            margin: 20px 0;
-            background: rgba(255,255,255,0.1);
-            padding: 10px;
-            border-radius: 8px;
-            display: inline-block;
-        }
+        /* Lobby */
+        .room-code { font-size: 48px; font-weight: bold; color: #ffb703; letter-spacing: 5px; margin: 20px 0; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px; display: inline-block; }
+        .player-list { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
+        .player-badge { background-color: #023e8a; padding: 10px 20px; border-radius: 20px; font-size: 20px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
 
-        .player-list {
-            list-style: none;
-            padding: 0;
-            margin: 20px 0;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 15px;
-        }
-
-        .player-badge {
-            background-color: #023e8a;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 20px;
-            font-weight: bold;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            animation: popIn 0.3s ease-out;
-        }
-
-        @keyframes popIn {
-            0% { transform: scale(0); opacity: 0; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-
-        #error-msg {
-            color: #ff4d4d;
-            font-weight: bold;
-            margin-top: 10px;
-        }
+        /* Plateau de jeu (TV) */
+        #tv-board { display: flex; flex-direction: column; gap: 20px; }
+        .dealer-area { background-color: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; }
+        .players-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
+        .player-mat { background-color: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 200px; border: 3px solid transparent; }
+        .player-mat.active-turn { border-color: #ffb703; box-shadow: 0 0 15px #ffb703; }
+        .player-mat.bust { opacity: 0.5; }
+        
+        /* Cartes */
+        .cards-container { display: flex; justify-content: center; gap: 5px; margin-top: 10px; min-height: 100px; }
+        .card { background-color: white; color: black; width: 60px; height: 90px; border-radius: 5px; display: flex; justify-content: center; align-items: center; font-size: 20px; font-weight: bold; box-shadow: 2px 2px 5px rgba(0,0,0,0.3); }
+        .card.red { color: red; }
+        .card.hidden { background-color: #1565C0; color: transparent; background-image: repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px); }
+        
+        #error-msg { color: #ff4d4d; font-weight: bold; margin-top: 10px; }
+        #tv-result-msg { font-size: 28px; color: #ffb703; font-weight: bold; margin-top: 20px; }
     </style>
 </head>
 <body>
@@ -110,47 +60,63 @@
     <h1>🃏 Blackjack Alcool</h1>
     <div class="prevention">Buvez responsablement, pas de conduite sous l'emprise de l'alcool.</div>
 
-    <div id="screen-home" class="screen active">
+    <div id="screen-home" class="screen active lobby-box">
         <h2>Bienvenue dans le jeu</h2>
-        <p>Choisissez comment vous souhaitez utiliser cet appareil :</p>
-        <button class="btn btn-main" onclick="window.initTVMode()">📺 ÉCRAN PRINCIPAL (TV)</button>
-        <br><br>
+        <button class="btn btn-main" onclick="window.initTVMode()">📺 ÉCRAN PRINCIPAL (TV)</button><br><br>
         <button class="btn btn-sub" onclick="window.showScreen('screen-join')">📱 REJOINDRE (Téléphone)</button>
     </div>
 
-    <div id="screen-join" class="screen">
+    <div id="screen-join" class="screen lobby-box">
         <h2>Rejoindre la table</h2>
         <input type="text" id="input-pseudo" placeholder="Votre Pseudo" maxlength="12"><br>
         <input type="text" id="input-room" placeholder="Code (4 lettres)" maxlength="4"><br>
-        <button class="btn btn-main" onclick="window.joinRoom()">Entrer dans le Salon</button>
+        <button class="btn btn-main" onclick="window.joinRoom()">Entrer</button>
         <div id="error-msg"></div>
-        <br>
-        <button class="btn btn-sub" onclick="window.showScreen('screen-home')" style="background-color: #6c757d;">Retour</button>
+        <br><button class="btn btn-sub" onclick="window.showScreen('screen-home')" style="background-color: #6c757d;">Retour</button>
     </div>
 
-    <div id="screen-mobile-lobby" class="screen">
+    <div id="screen-mobile-lobby" class="screen lobby-box">
         <h2>Connecté ! 🎉</h2>
-        <p>Regardez l'écran de la TV.</p>
-        <p>En attente du lancement de la partie par le croupier...</p>
+        <p>Regarde l'écran de la TV. En attente du lancement par le croupier...</p>
     </div>
 
-    <div id="screen-tv-lobby" class="screen">
+    <div id="screen-tv-lobby" class="screen lobby-box">
         <h2>Salon de jeu</h2>
-        <p>Connectez vos téléphones en allant sur ce site et entrez le code :</p>
+        <p>Connectez vos téléphones sur ce site et entrez le code :</p>
         <div id="display-room-code" class="room-code">----</div>
-        
-        <h3>Joueurs connectés (<span id="player-count">0</span>/6) :</h3>
+        <h3>Joueurs (<span id="player-count">0</span>/6) :</h3>
         <ul id="tv-player-list" class="player-list"></ul>
+        <button id="start-game-btn" class="btn btn-main" style="display: none;" onclick="window.startGame()">DÉMARRER LA PARTIE 🚀</button>
+    </div>
+
+    <div id="screen-tv-game" class="screen">
+        <div id="tv-board">
+            <div class="dealer-area">
+                <h2>Croupier <span id="tv-dealer-score"></span></h2>
+                <div class="cards-container" id="tv-dealer-cards"></div>
+            </div>
+            <div id="tv-result-msg"></div>
+            <div class="players-area" id="tv-players-area"></div>
+        </div>
+        <br>
+        <button id="new-round-btn" class="btn btn-main" style="display:none;" onclick="window.startGame()">Manche Suivante</button>
+    </div>
+
+    <div id="screen-mobile-game" class="screen lobby-box">
+        <h2 id="mobile-status-title">Chargement...</h2>
+        <div id="mobile-my-cards" class="cards-container"></div>
+        <h3 id="mobile-my-score"></h3>
         
-        <button id="start-game-btn" class="btn btn-main" style="display: none;">DÉMARRER LA PARTIE 🚀</button>
+        <div id="mobile-controls" style="display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px;">
+            <button class="btn btn-hit" onclick="window.hit()">HIT (Tirer)</button>
+            <button class="btn btn-stand" onclick="window.stand()">STAND (Rester)</button>
+        </div>
     </div>
 
     <script type="module">
-        // 1. Importation propre via CDN pour le navigateur
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // 2. Ta configuration Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyCEMdQpb7X9t_9wxMtZiX_GQJZgjSbcuKM",
             authDomain: "blackjackdaniel-1d8e1.firebaseapp.com",
@@ -161,117 +127,229 @@
             measurementId: "G-0BCDEG9S6W"
         };
 
-        // 3. Initialisation unique de Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
+        // Variables globales
         let currentRoomCode = "";
+        let myPseudo = "";
+        let isTV = false;
+        let localRoomData = null; // Stocke les données Firebase localement pour la logique
 
-        // Navigation entre les écrans
+        // --- OUTILS DE JEU ---
+        function calculateScore(hand) {
+            let score = 0; let aces = 0;
+            for (let card of hand) {
+                if (['J', 'Q', 'K'].includes(card.value)) score += 10;
+                else if (card.value === 'A') { aces += 1; score += 11; }
+                else score += parseInt(card.value);
+            }
+            while (score > 21 && aces > 0) { score -= 10; aces -= 1; }
+            return score;
+        }
+
+        function createHtmlCard(card, hidden = false) {
+            if (hidden) return `<div class="card hidden"></div>`;
+            const isRed = card.suit === '♥' || card.suit === '♦';
+            return `<div class="card ${isRed ? 'red' : ''}">${card.value}<br>${card.suit}</div>`;
+        }
+
         window.showScreen = (screenId) => {
             document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
             document.getElementById('error-msg').innerText = ""; 
         };
 
-        // Génération du code TV
-        function generateRoomCode() {
-            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-            let code = "";
-            for (let i = 0; i < 4; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-
-        // Action : Lancer la TV
+        // ==========================================
+        // LOGIQUE TV (CROUPIER)
+        // ==========================================
         window.initTVMode = async () => {
-            currentRoomCode = generateRoomCode();
+            isTV = true;
+            currentRoomCode = "";
+            const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            for (let i = 0; i < 4; i++) currentRoomCode += chars.charAt(Math.floor(Math.random() * chars.length));
             
-            try {
-                await setDoc(doc(db, "rooms", currentRoomCode), {
-                    status: "waiting",
-                    players: []
-                });
+            await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [] });
+            document.getElementById('display-room-code').innerText = currentRoomCode;
+            window.showScreen('screen-tv-lobby');
 
-                document.getElementById('display-room-code').innerText = currentRoomCode;
-                window.showScreen('screen-tv-lobby');
-
-                onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
-                    if (docSnap.exists()) {
-                        const data = docSnap.data();
-                        updatePlayerListTV(data.players);
-                    }
-                });
-            } catch (error) {
-                console.error("Erreur création room : ", error);
-                alert("Erreur de connexion à Firebase. Assure-toi que Firestore est bien en mode test dans ta console.");
-            }
+            onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
+                if (docSnap.exists()) {
+                    localRoomData = docSnap.data();
+                    if (localRoomData.status === "waiting") updateLobbyTV();
+                    if (localRoomData.status === "playing" || localRoomData.status === "finished") updateGameTV();
+                }
+            });
         };
 
-        // Mise à jour interface TV
-        function updatePlayerListTV(players) {
+        function updateLobbyTV() {
             const listEl = document.getElementById('tv-player-list');
-            const countEl = document.getElementById('player-count');
-            const startBtn = document.getElementById('start-game-btn');
-            
             listEl.innerHTML = "";
-            countEl.innerText = players.length;
+            document.getElementById('player-count').innerText = localRoomData.players.length;
+            localRoomData.players.forEach(p => listEl.innerHTML += `<li class="player-badge">${p}</li>`);
+            document.getElementById('start-game-btn').style.display = (localRoomData.players.length > 0) ? "inline-block" : "none";
+        }
 
-            players.forEach(player => {
-                const li = document.createElement('li');
-                li.classList.add('player-badge');
-                li.innerText = player;
-                listEl.appendChild(li);
+        window.startGame = async () => {
+            const suits = ['♠', '♥', '♣', '♦'];
+            const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+            let deck = [];
+            for(let s of suits) for(let v of values) deck.push({suit: s, value: v});
+            deck = deck.sort(() => Math.random() - 0.5); // Mélange simple
+
+            let playerHands = {};
+            let playerStates = {};
+            localRoomData.players.forEach(p => {
+                playerHands[p] = [deck.pop(), deck.pop()];
+                playerStates[p] = "playing"; // "playing", "stand", "bust"
+            });
+            let dealerHand = [deck.pop(), deck.pop()];
+
+            await updateDoc(doc(db, "rooms", currentRoomCode), {
+                status: "playing", deck, playerHands, playerStates, dealerHand, currentTurnIndex: 0, dealerPlayed: false
+            });
+        };
+
+        async function updateGameTV() {
+            window.showScreen('screen-tv-game');
+            const data = localRoomData;
+            
+            // Affichage dealer
+            const isFinished = data.status === "finished";
+            let dealerCardsHtml = "";
+            data.dealerHand.forEach((c, i) => { dealerCardsHtml += createHtmlCard(c, (!isFinished && i===1)); });
+            document.getElementById('tv-dealer-cards').innerHTML = dealerCardsHtml;
+            document.getElementById('tv-dealer-score').innerText = isFinished ? `- Score: ${calculateScore(data.dealerHand)}` : "";
+
+            // Affichage joueurs
+            const playersArea = document.getElementById('tv-players-area');
+            playersArea.innerHTML = "";
+            data.players.forEach((p, index) => {
+                const hand = data.playerHands[p];
+                const state = data.playerStates[p];
+                const isCurrentTurn = (index === data.currentTurnIndex && !isFinished);
+                
+                let cardsHtml = hand.map(c => createHtmlCard(c)).join('');
+                let matClass = `player-mat ${isCurrentTurn ? 'active-turn' : ''} ${state === 'bust' ? 'bust' : ''}`;
+                
+                let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : "";
+
+                playersArea.innerHTML += `
+                    <div class="${matClass}">
+                        <h3>${p} (Score: ${calculateScore(hand)})</h3>
+                        <p style="color:#ffb703; font-weight:bold">${stateText}</p>
+                        <div class="cards-container">${cardsHtml}</div>
+                    </div>`;
             });
 
-            if (players.length > 0 && players.length <= 6) {
-                startBtn.style.display = "inline-block";
+            // Gérer le tour automatique du Croupier si tous les joueurs ont joué
+            if (data.currentTurnIndex >= data.players.length && data.status === "playing" && !data.dealerPlayed) {
+                playDealerTurn();
+            }
+
+            // Bouton de fin
+            document.getElementById('new-round-btn').style.display = isFinished ? "inline-block" : "none";
+            if(isFinished) document.getElementById('tv-result-msg').innerText = "Manche terminée ! Préparez-vous à boire...";
+            else document.getElementById('tv-result-msg').innerText = "";
+        }
+
+        async function playDealerTurn() {
+            let data = localRoomData;
+            let dHand = [...data.dealerHand];
+            let deck = [...data.deck];
+
+            while(calculateScore(dHand) < 17) { dHand.push(deck.pop()); }
+
+            await updateDoc(doc(db, "rooms", currentRoomCode), {
+                dealerHand: dHand, deck: deck, dealerPlayed: true, status: "finished"
+            });
+        }
+
+        // ==========================================
+        // LOGIQUE MOBILE (JOUEUR)
+        // ==========================================
+        window.joinRoom = async () => {
+            myPseudo = document.getElementById('input-pseudo').value.trim();
+            currentRoomCode = document.getElementById('input-room').value.trim().toUpperCase();
+            if (myPseudo === "" || currentRoomCode.length !== 4) return;
+
+            try {
+                const roomRef = doc(db, "rooms", currentRoomCode);
+                const roomSnap = await getDoc(roomRef);
+                if (roomSnap.exists()) {
+                    await updateDoc(roomRef, { players: arrayUnion(myPseudo) });
+                    window.showScreen('screen-mobile-lobby');
+                    
+                    onSnapshot(roomRef, (docSnap) => {
+                        localRoomData = docSnap.data();
+                        if (localRoomData.status === "playing" || localRoomData.status === "finished") updateGameMobile();
+                        else window.showScreen('screen-mobile-lobby');
+                    });
+                } else { document.getElementById('error-msg').innerText = "Code introuvable."; }
+            } catch (error) { document.getElementById('error-msg').innerText = "Erreur de connexion."; }
+        };
+
+        function updateGameMobile() {
+            window.showScreen('screen-mobile-game');
+            const data = localRoomData;
+            const currentPlayer = data.players[data.currentTurnIndex];
+            const isMyTurn = (currentPlayer === myPseudo && data.status === "playing");
+            const myState = data.playerStates[myPseudo];
+
+            // Afficher ma main
+            const myHand = data.playerHands[myPseudo];
+            document.getElementById('mobile-my-cards').innerHTML = myHand.map(c => createHtmlCard(c)).join('');
+            document.getElementById('mobile-my-score').innerText = `Mon Score : ${calculateScore(myHand)}`;
+
+            const title = document.getElementById('mobile-status-title');
+            const controls = document.getElementById('mobile-controls');
+
+            if (data.status === "finished") {
+                title.innerText = "Fin de la manche ! Regarde la TV";
+                title.style.color = "#ffb703";
+                controls.style.display = "none";
+            } else if (myState === "bust") {
+                title.innerText = "💥 BUST ! (Tu as dépassé 21)";
+                title.style.color = "#f44336";
+                controls.style.display = "none";
+            } else if (myState === "stand") {
+                title.innerText = "✅ Tu as passé ton tour. Attente...";
+                title.style.color = "#4CAF50";
+                controls.style.display = "none";
+            } else if (isMyTurn) {
+                title.innerText = "🔥 C'EST À TOI !";
+                title.style.color = "#ffb703";
+                controls.style.display = "flex";
             } else {
-                startBtn.style.display = "none";
+                title.innerText = `⏳ En attente de ${currentPlayer}...`;
+                title.style.color = "white";
+                controls.style.display = "none";
             }
         }
 
-        // Action : Rejoindre depuis le téléphone
-        window.joinRoom = async () => {
-            const pseudo = document.getElementById('input-pseudo').value.trim();
-            let roomCode = document.getElementById('input-room').value.trim().toUpperCase();
-            const errorMsg = document.getElementById('error-msg');
-
-            if (pseudo === "" || roomCode.length !== 4) {
-                errorMsg.innerText = "Veuillez entrer un pseudo et un code valide à 4 lettres.";
-                return;
+        window.hit = async () => {
+            let data = localRoomData;
+            let deck = [...data.deck];
+            let myHand = [...data.playerHands[myPseudo]];
+            
+            myHand.push(deck.pop());
+            let score = calculateScore(myHand);
+            
+            let updates = { deck: deck, [`playerHands.${myPseudo}`]: myHand };
+            
+            if (score > 21) {
+                updates[`playerStates.${myPseudo}`] = "bust";
+                updates.currentTurnIndex = data.currentTurnIndex + 1; // Passe au joueur suivant
             }
+            
+            await updateDoc(doc(db, "rooms", currentRoomCode), updates);
+        };
 
-            try {
-                const roomRef = doc(db, "rooms", roomCode);
-                const roomSnap = await getDoc(roomRef);
-
-                if (roomSnap.exists()) {
-                    const data = roomSnap.data();
-                    
-                    if (data.players.length >= 6) {
-                        errorMsg.innerText = "Ce salon est plein (6 joueurs max).";
-                        return;
-                    }
-
-                    if (data.players.includes(pseudo)) {
-                        errorMsg.innerText = "Ce pseudo est déjà pris dans ce salon.";
-                        return;
-                    }
-
-                    await updateDoc(roomRef, {
-                        players: arrayUnion(pseudo)
-                    });
-
-                    window.showScreen('screen-mobile-lobby');
-                } else {
-                    errorMsg.innerText = "Salon introuvable. Vérifiez le code.";
-                }
-            } catch (error) {
-                console.error("Erreur pour rejoindre : ", error);
-                errorMsg.innerText = "Erreur de connexion avec Firebase.";
-            }
+        window.stand = async () => {
+            await updateDoc(doc(db, "rooms", currentRoomCode), {
+                [`playerStates.${myPseudo}`]: "stand",
+                currentTurnIndex: localRoomData.currentTurnIndex + 1 // Passe au joueur suivant
+            });
         };
     </script>
 </body>
