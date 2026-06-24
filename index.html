@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Cercle Privé</title>
+    <title>Blackjack</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0a0403;
-            /* Ambiance table de casino en bois précieux sombre avec halo de lumière central */
-            --table-color: radial-gradient(circle at 50% 30%, #2c120c 0%, #0a0403 100%);
+            /* Palette Bois, Or, Rouge, Noir */
+            --bg-color: #0d0604;
+            --table-color: radial-gradient(circle at 50% 30%, #3a1710 0%, #0d0604 100%);
             --gold: #d4af37;
             --gold-gradient: linear-gradient(135deg, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            --glass-bg: rgba(22, 11, 9, 0.85);
-            --glass-border: rgba(212, 175, 55, 0.2);
-            --danger: #b31117; /* Rouge Casino Royal */
-            --amber: #f39c12;  /* Or secondaire chaud */
+            --glass-bg: rgba(20, 9, 6, 0.85);
+            --glass-border: rgba(212, 175, 55, 0.3);
+            --danger: #c0392b; /* Rouge élégant */
+            --text-light: #f5f5f5;
         }
 
         body {
@@ -23,194 +23,184 @@
             background: var(--table-color);
             background-color: var(--bg-color);
             background-attachment: fixed;
-            color: white;
+            color: var(--text-light);
             text-align: center;
             margin: 0;
             padding: 20px;
             overflow-x: hidden;
         }
 
-        /* Effet vignette tamisée de tripot de luxe */
-        body::before {
-            content: '';
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(0,0,0,0.8) 100%);
-            z-index: -1; pointer-events: none;
-        }
-
         h1 {
             font-family: 'Playfair Display', serif;
-            font-size: 3em;
+            font-size: 3.5em;
             background: var(--gold-gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0px 4px 20px rgba(212, 175, 55, 0.25);
+            text-shadow: 0px 4px 15px rgba(212, 175, 55, 0.2);
             margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
         }
 
-        .prevention { font-size: 0.85em; color: rgba(255,255,255,0.4); letter-spacing: 2px; margin-bottom: 40px; text-transform: uppercase; }
+        .prevention { font-size: 0.85em; color: rgba(255,255,255,0.5); letter-spacing: 2px; margin-bottom: 40px; text-transform: uppercase; }
         
-        /* Conteneurs Écrans Bois & Or */
-        .screen { display: none; margin: 0 auto; position: relative; animation: fadeSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+        /* Conteneurs */
+        .screen { display: none; margin: 0 auto; position: relative; animation: fadeIn 0.4s ease-out; z-index: 10; }
         .screen.active { display: block; }
         
         .lobby-box { 
             max-width: 600px; 
             background: var(--glass-bg); 
-            backdrop-filter: blur(15px); 
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(10px); 
+            -webkit-backdrop-filter: blur(10px);
             padding: 40px; 
-            border-radius: 20px; 
+            border-radius: 16px; 
             border: 1px solid var(--glass-border);
-            box-shadow: 0 30px 60px -15px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8); 
             margin: 0 auto; 
         }
         
-        /* Boutons Ciselés */
+        /* Boutons (Z-index fort pour être sûr qu'ils soient cliquables) */
         .btn { 
-            padding: 16px 32px; font-size: 15px; font-weight: 800; font-family: 'Montserrat', sans-serif;
-            text-transform: uppercase; letter-spacing: 2px;
+            padding: 18px 32px; font-size: 16px; font-weight: 800; font-family: 'Montserrat', sans-serif;
+            text-transform: uppercase; letter-spacing: 1px;
             cursor: pointer; border: none; border-radius: 8px; margin: 10px; 
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); position: relative;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            transition: all 0.2s ease-in-out; position: relative; z-index: 20;
         }
-        .btn:active { transform: scale(0.97); }
+        .btn:active { transform: scale(0.95); }
         
-        .btn-main { background: var(--gold-gradient); color: #0a0403; font-weight: 900; }
-        .btn-main:hover { box-shadow: 0 0 30px rgba(212, 175, 55, 0.5); transform: translateY(-2px); }
+        .btn-main { background: var(--gold-gradient); color: #000; font-weight: 900; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
+        .btn-main:hover { box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5); transform: translateY(-2px); }
         
-        .btn-sub { background: rgba(255,255,255,0.05); color: white; border: 1px solid rgba(255,255,255,0.1); }
-        .btn-sub:hover { background: rgba(255,255,255,0.15); transform: translateY(-2px); border-color: var(--gold); }
+        .btn-sub { background: rgba(0,0,0,0.6); color: var(--text-light); border: 1px solid var(--gold); }
+        .btn-sub:hover { background: rgba(212, 175, 55, 0.1); transform: translateY(-2px); }
         
         /* Inputs */
         input { 
             padding: 16px; font-size: 18px; font-family: 'Montserrat', sans-serif; font-weight: 600;
-            border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); 
-            background: rgba(0,0,0,0.6); color: white; margin: 10px 0; 
+            border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.4); 
+            background: rgba(0,0,0,0.8); color: white; margin: 10px 0; 
             width: 80%; max-width: 300px; text-align: center; text-transform: uppercase;
             outline: none; transition: 0.3s;
         }
-        input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
+        input:focus { border-color: var(--gold); box-shadow: 0 0 15px rgba(212, 175, 55, 0.3); }
         
-        /* Code TV & Badges */
+        /* Code & Badges */
         .room-code { 
             font-family: 'Playfair Display', serif; font-size: 65px; font-weight: 900; 
             color: var(--gold); letter-spacing: 8px; margin: 20px 0; 
             background: #000; padding: 15px 35px; border-radius: 12px; 
-            display: inline-block; box-shadow: inset 0 4px 20px rgba(0,0,0,0.9); border: 1px solid rgba(212,175,55,0.4);
+            display: inline-block; border: 1px solid rgba(212,175,55,0.5);
+            text-shadow: 0 0 10px rgba(212,175,55,0.4);
         }
-        .small-room-code { position: absolute; top: 10px; right: 20px; font-size: 14px; background: rgba(0,0,0,0.8); padding: 8px 16px; border-radius: 6px; color: var(--gold); border: 1px solid rgba(212,175,55,0.2); letter-spacing: 1px;}
         
         .player-list { list-style: none; padding: 0; margin: 30px 0; display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
         .player-badge { 
-            background: linear-gradient(135deg, #4a1212, #240505); 
+            background: linear-gradient(135deg, #5c1811, #2b0b08); 
             padding: 14px 28px; border-radius: 8px; font-size: 18px; font-weight: bold; 
-            box-shadow: 0 8px 20px rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.15);
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            border: 1px solid rgba(212,175,55,0.3); color: var(--gold);
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         /* Board TV */
-        #tv-board { display: flex; flex-direction: column; gap: 40px; margin-top: 30px; }
+        #tv-board { display: flex; flex-direction: column; gap: 30px; margin-top: 20px; }
         .dealer-area { 
-            background: linear-gradient(to bottom, rgba(15,5,3,0.9), rgba(5,2,1,0.6)); 
-            padding: 35px; border-radius: 16px; border: 1px solid rgba(212,175,55,0.2);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8); margin: 0 auto; max-width: 850px; width: 100%; box-sizing: border-box;
+            background: rgba(20, 9, 6, 0.9); 
+            padding: 30px; border-radius: 16px; border: 1px solid rgba(212,175,55,0.3);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8); margin: 0 auto; max-width: 800px; width: 100%; box-sizing: border-box;
         }
-        .dealer-area h2 { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 2.2em; margin-top:0; letter-spacing: 1px;}
+        .dealer-area h2 { font-family: 'Playfair Display', serif; color: var(--gold); font-size: 2em; margin-top:0; }
         
-        .players-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; margin-top: 20px; }
+        .players-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; margin-top: 10px; }
         .player-mat { 
-            background: rgba(15, 6, 5, 0.85); padding: 25px; border-radius: 12px; min-width: 240px; 
-            border: 1px solid rgba(255,255,255,0.05); position: relative;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.6); transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 12px; min-width: 220px; 
+            border: 1px solid rgba(212,175,55,0.1); position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5); transition: 0.3s;
         }
-        .player-mat h3 { margin-top: 0; font-size: 1.2em; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
-        .player-mat.active-turn { border-color: var(--gold); box-shadow: 0 0 30px rgba(212, 175, 55, 0.35); transform: translateY(-8px); background: rgba(30, 15, 12, 0.9); }
-        .player-mat.bust { opacity: 0.4; filter: grayscale(80%); border-color: var(--danger); }
+        .player-mat h3 { margin-top: 0; font-size: 1.2em; text-transform: uppercase; color: #fff; }
+        .player-mat.active-turn { border-color: var(--gold); box-shadow: 0 0 25px rgba(212, 175, 55, 0.4); transform: translateY(-5px); background: rgba(30, 15, 12, 0.9); }
+        .player-mat.bust { opacity: 0.5; filter: grayscale(50%); border-color: var(--danger); }
         
-        /* Les Cartes Réalistes */
-        .cards-container { display: flex; justify-content: center; margin-top: 20px; min-height: 125px; padding-left: 35px; }
+        /* Cartes */
+        .cards-container { display: flex; justify-content: center; margin-top: 15px; min-height: 125px; padding-left: 30px; }
         
         .card { 
-            background-color: #fcfaf2; color: #111; width: 85px; height: 120px; 
+            background-color: #fff; color: #000; width: 80px; height: 115px; 
             border-radius: 6px; display: flex; flex-direction: column; justify-content: center; align-items: center; 
-            font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 900; 
-            box-shadow: -6px 6px 14px rgba(0,0,0,0.5), inset 0 0 0 4px #fcfaf2, inset 0 0 0 5px rgba(0,0,0,0.07); 
-            position: relative; margin-left: -35px;
-            animation: dealCard 0.45s cubic-bezier(0.15, 0.85, 0.35, 1.1) forwards;
-            opacity: 0; transform-origin: center bottom;
+            font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 900; 
+            box-shadow: -4px 4px 10px rgba(0,0,0,0.5); border: 1px solid #ccc;
+            position: relative; margin-left: -30px;
+            animation: dealCard 0.4s cubic-bezier(0.15, 0.85, 0.35, 1.1) forwards;
+            opacity: 0; transform-origin: bottom center;
         }
         .card.red { color: var(--danger); }
         .card.hidden { 
-            background: linear-gradient(135deg, #501111 0%, #200303 100%); 
-            color: transparent; border: 2px solid #fff; box-shadow: -6px 6px 14px rgba(0,0,0,0.6);
-            /* Motif dos de carte orné */
-            background-image: radial-gradient(rgba(214, 175, 55, 0.15) 1px, transparent 0);
-            background-size: 8px 8px;
+            background: linear-gradient(135deg, #6b1515 0%, #2b0505 100%); 
+            color: transparent; border: 2px solid var(--gold);
+            background-image: radial-gradient(rgba(212, 175, 55, 0.3) 2px, transparent 0);
+            background-size: 10px 10px;
         }
         .card.hidden::before, .card.hidden::after { display: none; }
-        .card::before { content: attr(data-suit); position: absolute; top: 6px; left: 10px; font-size: 18px; }
-        .card::after { content: attr(data-suit); position: absolute; bottom: 6px; right: 10px; font-size: 18px; transform: rotate(180deg); }
+        .card::before { content: attr(data-suit); position: absolute; top: 5px; left: 8px; font-size: 16px; }
+        .card::after { content: attr(data-suit); position: absolute; bottom: 5px; right: 8px; font-size: 16px; transform: rotate(180deg); }
         
         /* Commandes Mobiles */
-        .game-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 30px; width: 100%; }
-        .btn-game { padding: 22px; font-size: 20px; font-weight: 900; border-radius: 12px; border: none; color: white; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.15s; box-shadow: 0 5px 0 rgba(0,0,0,0.4); }
-        .btn-game:active { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0,0,0,0.4); }
+        .game-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; width: 100%; }
+        .btn-game { padding: 20px; font-size: 18px; font-weight: 900; border-radius: 10px; border: none; color: white; cursor: pointer; text-transform: uppercase; transition: 0.15s; }
+        .btn-game:active { transform: translateY(3px); }
         
-        .btn-hit { background: linear-gradient(to bottom, #d63031, var(--danger)); }
-        .btn-stand { background: linear-gradient(to bottom, #f39c12, #cc7a00); color: white; }
-        .btn-double { background: linear-gradient(to bottom, #444, #222); border: 1px solid var(--gold); color: var(--gold); }
-        .btn-split { background: linear-gradient(to bottom, #6c5ce7, #4b38db); grid-column: span 2; }
+        .btn-hit { background: var(--danger); box-shadow: 0 4px 0 #8e1b15; }
+        .btn-stand { background: #d35400; box-shadow: 0 4px 0 #a04000; }
+        .btn-double { background: #2c3e50; border: 1px solid var(--gold); color: var(--gold); box-shadow: 0 4px 0 #1a252f; }
+        .btn-split { background: #8e44ad; grid-column: span 2; box-shadow: 0 4px 0 #732d91; }
         
-        /* Modals Plein Écran */
+        /* Modals */
         .fullscreen-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(10, 4, 3, 0.98); z-index: 100; flex-direction: column; 
+            background: rgba(0, 0, 0, 0.95); z-index: 100; flex-direction: column; 
             justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
-            animation: fadeInModal 0.35s ease-out forwards;
         }
         
-        .modal-title { font-family: 'Playfair Display', serif; font-size: 48px; margin-bottom: 20px; text-transform: uppercase; text-align: center; text-shadow: 0 0 20px rgba(212,175,55,0.3); }
-        .modal-text { font-size: 24px; font-weight: 600; color: white; text-align: center; white-space: pre-line; line-height: 1.6; margin-bottom: 35px; }
+        .modal-title { font-family: 'Playfair Display', serif; font-size: 40px; margin-bottom: 15px; color: var(--gold); text-transform: uppercase; text-align: center; }
+        .modal-text { font-size: 22px; font-weight: 600; color: white; text-align: center; white-space: pre-line; line-height: 1.5; margin-bottom: 30px; }
         
-        .take-color { color: #ff4d4d; text-shadow: 0 0 10px rgba(255,0,0,0.2); }
+        .take-color { color: var(--danger); }
         .btn-give { 
-            background: rgba(212, 175, 55, 0.08); color: var(--gold); border: 2px solid var(--gold);
-            padding: 18px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; 
-            transition: 0.2s; width: 100%; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;
+            background: transparent; color: var(--gold); border: 2px solid var(--gold);
+            padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; 
+            transition: 0.2s; width: 100%; margin-bottom: 10px; text-transform: uppercase;
         }
-        .btn-give:hover { background: var(--gold); color: #111; box-shadow: 0 0 20px rgba(212, 175, 55, 0.3); }
+        .btn-give:hover { background: var(--gold); color: #000; }
 
-        /* Keyframes */
-        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes fadeInModal { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes popIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: scale(1); } }
-        @keyframes dealCard { 0% { opacity: 0; transform: translateY(-80px) rotate(-20deg) scale(0.6); } 100% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes dealCard { 0% { opacity: 0; transform: translateY(-50px) rotate(-10deg); } 100% { opacity: 1; transform: translateY(0) rotate(0deg); } }
         
-        #error-msg { color: #ff4d4d; font-weight: bold; margin-top: 15px; }
-        #tv-result-msg { font-size: 30px; font-family: 'Playfair Display', serif; color: var(--gold); font-weight: bold; margin-top: 25px; }
-        .status-badge { display: inline-block; padding: 6px 14px; border-radius: 4px; font-size: 0.8em; font-weight: 800; background: rgba(0,0,0,0.6); margin-bottom: 15px; text-transform: uppercase; border: 1px solid rgba(255,255,255,0.1); letter-spacing: 1px; }
+        #error-msg { color: var(--danger); font-weight: bold; margin-top: 15px; }
+        #tv-result-msg { font-size: 26px; font-family: 'Playfair Display', serif; color: var(--gold); font-weight: bold; margin-top: 15px; }
+        .status-badge { display: inline-block; padding: 5px 12px; border-radius: 4px; font-size: 0.8em; font-weight: 800; background: rgba(255,255,255,0.1); margin-bottom: 10px; text-transform: uppercase; border: 1px solid rgba(212,175,55,0.4); }
     </style>
 </head>
 <body>
 
-    <h1>Cercle Privé</h1>
-    <div class="prevention">Blackjack & Distribution Secrète • Modération requise</div>
+    <h1>Blackjack</h1>
+    <div class="prevention">Mode Distribution Secrète • Modération requise</div>
 
     <!-- ACCUEIL -->
     <div id="screen-home" class="screen active lobby-box">
-        <h2 style="font-family: 'Playfair Display', serif; font-size: 2.2em; margin-top: 0; color: var(--gold);">Ouverture de la Table</h2>
-        <p style="opacity: 0.7; margin-bottom: 35px;">Choisissez le mode d'affichage pour cette session.</p>
+        <h2 style="font-family: 'Playfair Display', serif; color: var(--gold); font-size: 2em; margin-top: 0;">Ouverture de la Table</h2>
+        <p style="margin-bottom: 30px; opacity: 0.8;">Choisissez votre rôle pour cette partie.</p>
         <button class="btn btn-main" style="width: 100%; margin: 10px 0;" onclick="window.initTVMode()">📺 Écran Principal (TV / PC)</button><br>
         <button class="btn btn-sub" style="width: 100%; margin: 10px 0;" onclick="window.showScreen('screen-join')">📱 Rejoindre avec un Smartphone</button>
     </div>
 
     <!-- REJOINDRE -->
     <div id="screen-join" class="screen lobby-box">
-        <h2>Rejoindre la table</h2>
+        <h2 style="color: var(--gold); font-family: 'Playfair Display', serif;">Prendre Place</h2>
         <input type="text" id="input-pseudo" placeholder="Votre Pseudo" maxlength="12"><br>
-        <input type="text" id="input-room" placeholder="Code de table (4 Lettres)" maxlength="4"><br>
-        <button class="btn btn-main" style="width: 80%; margin-top: 20px;" onclick="window.joinRoom()">Prendre Place</button>
+        <input type="text" id="input-room" placeholder="Code (4 Lettres)" maxlength="4"><br>
+        <button class="btn btn-main" style="width: 80%; margin-top: 20px;" onclick="window.joinRoom()">Valider</button>
         <div id="error-msg"></div>
         <br><button class="btn btn-sub" onclick="window.showScreen('screen-home')" style="margin-top: 10px;">← Retour</button>
     </div>
@@ -218,49 +208,49 @@
     <!-- LOBBY MOBILE -->
     <div id="screen-mobile-lobby" class="screen lobby-box">
         <div style="font-size: 4em; margin-bottom: 10px;">🥃</div>
-        <h2>Place réservée !</h2>
-        <p style="opacity: 0.7;">Installez-vous confortablement. Le croupier va lancer la distribution d'ici peu.</p>
+        <h2 style="color: var(--gold);">Vous êtes à table !</h2>
+        <p style="opacity: 0.8;">Attendez que le croupier (l'écran TV) lance la partie.</p>
     </div>
 
     <!-- DECO -->
     <div id="screen-disconnected" class="screen lobby-box" style="border-color: var(--danger);">
-        <h2>🚨 Table Fermée</h2>
-        <p>La session a pris fin ou la connexion avec le serveur a été interrompue.</p>
+        <h2 style="color: var(--danger);">🚨 Table Fermée</h2>
+        <p>La session a pris fin ou la connexion a été perdue.</p>
         <button class="btn btn-main" onclick="window.location.reload()">Retour au menu</button>
     </div>
 
     <!-- LOBBY TV -->
     <div id="screen-tv-lobby" class="screen lobby-box">
-        <h2 style="margin-top:0; opacity: 0.8;">Code d'accès secret</h2>
+        <h2 style="margin-top:0;">Code de la table :</h2>
         <div id="display-room-code" class="room-code">----</div>
-        <h3 style="color: var(--gold); border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 12px; font-weight: 600;">Membres connectés (<span id="player-count">0</span>/6)</h3>
+        <h3 style="color: var(--gold); margin-top: 20px;">Joueurs (<span id="player-count">0</span>/6)</h3>
         <ul id="tv-player-list" class="player-list"></ul>
-        <button id="start-game-btn" class="btn btn-main" style="display: none; font-size: 1.1em; padding: 18px 36px; margin-top: 20px;" onclick="window.startGame()">Lancer la donne ♠️</button>
+        <button id="start-game-btn" class="btn btn-main" style="display: none; padding: 15px 30px; margin-top: 20px;" onclick="window.startGame()">Distribuer les cartes</button>
     </div>
 
     <!-- JEU TV -->
-    <div id="screen-tv-game" class="screen" style="max-width: 1250px;">
-        <div class="small-room-code">Code: <span id="tv-game-room-code"></span></div>
+    <div id="screen-tv-game" class="screen" style="max-width: 1200px;">
+        <div style="position: absolute; top: -30px; right: 10px; font-weight: bold; background: #000; padding: 5px 10px; border-radius: 5px; border: 1px solid var(--gold);">Code: <span id="tv-game-room-code"></span></div>
         <div id="tv-board">
             <div class="dealer-area">
-                <h2>Banque <span id="tv-dealer-score" style="font-size: 0.6em; color: var(--gold); margin-left: 10px;"></span></h2>
+                <h2>La Banque <span id="tv-dealer-score" style="font-size: 0.7em; color: var(--gold); margin-left: 10px;"></span></h2>
                 <div class="cards-container" id="tv-dealer-cards"></div>
             </div>
             <div id="tv-result-msg"></div>
             <div class="players-area" id="tv-players-area"></div>
         </div>
         <br>
-        <button id="new-round-btn" class="btn btn-main" style="display:none; font-size: 1.1em; margin-top: 40px;" onclick="window.startGame()">Manche Suivante 🔄</button>
+        <button id="new-round-btn" class="btn btn-main" style="display:none; font-size: 1.1em; margin-top: 30px;" onclick="window.startGame()">Manche Suivante 🔄</button>
     </div>
 
     <!-- JEU MOBILE -->
     <div id="screen-mobile-game" class="screen lobby-box" style="padding: 20px;">
         <div id="mobile-status-badge" class="status-badge">Phase de jeu</div>
-        <h2 id="mobile-status-title" style="margin-top: 0; font-size: 1.5em;">Chargement...</h2>
+        <h2 id="mobile-status-title" style="margin-top: 0; font-size: 1.4em;">Chargement...</h2>
         
-        <div style="background: rgba(0,0,0,0.4); padding: 25px 10px; border-radius: 12px; margin: 20px 0; border: 1px solid rgba(212,175,55,0.1);">
-            <div id="mobile-my-cards" class="cards-container" style="min-height: 140px;"></div>
-            <h3 id="mobile-my-score" style="margin-bottom: 0; color: var(--gold); font-family: 'Playfair Display', serif; font-size: 1.6em;"></h3>
+        <div style="background: rgba(0,0,0,0.5); padding: 20px 10px; border-radius: 10px; margin: 20px 0; border: 1px solid rgba(212,175,55,0.2);">
+            <div id="mobile-my-cards" class="cards-container" style="min-height: 130px;"></div>
+            <h3 id="mobile-my-score" style="margin-bottom: 0; color: var(--gold); font-family: 'Playfair Display', serif; font-size: 1.5em;"></h3>
         </div>
         
         <div id="mobile-controls" class="game-controls" style="display: none;">
@@ -275,15 +265,15 @@
     <div id="mobile-distrib-modal" class="fullscreen-modal">
         <h2 id="distrib-modal-title" class="modal-title"></h2>
         <p id="distrib-modal-text" class="modal-text"></p>
-        <div style="width: 100%; max-width: 350px;" id="distrib-buttons-container"></div>
+        <div style="width: 100%; max-width: 320px;" id="distrib-buttons-container"></div>
     </div>
 
     <!-- MODAL RÉSULTAT (MOBILE) -->
     <div id="mobile-drink-modal" class="fullscreen-modal">
-        <div style="font-size: 4.5em; margin-bottom: 10px;" id="drink-modal-icon">🍷</div>
+        <div style="font-size: 4em; margin-bottom: 10px;" id="drink-modal-icon">🍷</div>
         <h2 id="drink-modal-title" class="modal-title">VERDICT</h2>
         <p id="drink-modal-text" class="modal-text"></p>
-        <button class="btn btn-sub" onclick="document.getElementById('mobile-drink-modal').style.display='none'" style="margin-top:30px; padding: 15px 45px;">Continuer</button>
+        <button class="btn btn-main" onclick="document.getElementById('mobile-drink-modal').style.display='none'" style="margin-top:20px;">Continuer</button>
     </div>
 
     <script type="module">
@@ -307,7 +297,7 @@
         let isTV = false;
         let localRoomData = null;
 
-        // Caches HTML pour bloquer la répétition infinie des animations au re-render Firebase
+        // Caches HTML pour bloquer l'animation en boucle
         let lastLobbyPlayersHtml = "";
         let lastDealerCardsHtml = "";
         let lastPlayersAreaHtml = "";
@@ -328,7 +318,7 @@
         }
 
         function createHtmlCard(card, hidden = false, index = 0) {
-            const delay = index * 0.12;
+            const delay = index * 0.15;
             if (hidden) return `<div class="card hidden" style="animation-delay: ${delay}s"></div>`;
             const isRed = card.suit === '♥' || card.suit === '♦';
             return `<div class="card ${isRed ? 'red' : ''}" data-suit="${card.suit}" style="animation-delay: ${delay}s">${card.value}</div>`;
@@ -340,9 +330,6 @@
             document.getElementById('error-msg').innerText = ""; 
         };
 
-        // ==========================================
-        // SYSTÈME DE DÉCONNEXION & LOBBY PINGS
-        // ==========================================
         window.addEventListener('beforeunload', () => {
             if (currentRoomCode) {
                 if (isTV) updateDoc(doc(db, "rooms", currentRoomCode), { status: "closed" }).catch(()=>{});
@@ -384,9 +371,6 @@
             }
         }, 5000);
 
-        // ==========================================
-        // AFFICHAGE TABLE PRINCIPALE (TV)
-        // ==========================================
         window.initTVMode = async () => {
             isTV = true; currentRoomCode = "";
             for (let i = 0; i < 4; i++) currentRoomCode += "ABCDEFGHIJKLMNOPQRSTUVWXYZ".charAt(Math.floor(Math.random() * 26));
@@ -410,8 +394,6 @@
             document.getElementById('player-count').innerText = localRoomData.players.length;
             
             let newPlayersHtml = localRoomData.players.map(p => `<li class="player-badge">${p}</li>`).join('');
-            
-            // Évite de réinjecter si identique (bloque la répétition de l'animation d'entrée)
             if (newPlayersHtml !== lastLobbyPlayersHtml) {
                 listEl.innerHTML = newPlayersHtml;
                 lastLobbyPlayersHtml = newPlayersHtml;
@@ -430,7 +412,6 @@
             let playerHands = {}, playerStates = {};
             activePlayers.forEach(p => { playerHands[p] = [deck.pop(), deck.pop()]; playerStates[p] = "playing"; });
             
-            // Reset des caches visuels à chaque nouvelle manche
             lastDealerCardsHtml = ""; lastPlayersAreaHtml = ""; lastMobileCardsHtml = "";
 
             await updateDoc(doc(db, "rooms", currentRoomCode), {
@@ -451,7 +432,7 @@
                 lastDealerCardsHtml = newDealerCardsHtml;
             }
             
-            document.getElementById('tv-dealer-score').innerText = (isFin || isDist) ? `(Score: ${calculateScore(data.dealerHand)})` : "";
+            document.getElementById('tv-dealer-score').innerText = (isFin || isDist) ? `(${calculateScore(data.dealerHand)})` : "";
 
             let newPlayersAreaHtml = "";
             data.players.forEach((p, index) => {
@@ -462,20 +443,20 @@
                 let stateText = state === 'bust' ? "💥 BRÛLÉ" : state === 'stand' ? "✅ RESTE" : state === 'left' ? "❌ PARTI" : "";
                 if (data.doubled?.[p]) stateText += " (DOUBLE)";
                 
-                if (isDist) stateText = "🤫 Choix de la cible...";
+                if (isDist) stateText = "🤫 Choix...";
                 else if (isFin && data.results?.[p]) {
                     const res = data.results[p];
                     if (res.culSec) stateText = "🚨 CUL SEC !";
-                    else if (res.take > 0 || res.give > 0) stateText = (res.take > 0 ? `🍺 +${res.take} ` : "") + (res.give > 0 ? `🎁 Donne ${res.give}` : "");
+                    else if (res.take > 0 || res.give > 0) stateText = (res.take > 0 ? `🍺 +${res.take} ` : "") + (res.give > 0 ? `🎁 ${res.give}` : "");
                     else stateText = "🛡️ SAUVÉ";
                 }
 
                 newPlayersAreaHtml += `
                     <div class="player-mat ${isCurrent ? 'active-turn' : ''} ${['bust', 'left'].includes(state) ? 'bust' : ''}">
                         <h3>${p.replace("_split", " (Split)")}</h3>
-                        <div style="color:var(--gold); font-weight:bold; height: 20px; font-size:0.9em; text-transform:uppercase">${stateText}</div>
+                        <div style="color:var(--gold); font-weight:bold; font-size:0.9em; height:18px;">${stateText}</div>
                         <div class="cards-container">${hand.map((c, i) => createHtmlCard(c, false, i)).join('')}</div>
-                        <div style="position:absolute; bottom:-15px; left:50%; transform:translateX(-50%); background:#1a0b08; padding:5px 18px; border-radius:30px; border:1px solid var(--gold); font-weight:800; font-size:0.9em">${calculateScore(hand)}</div>
+                        <div style="position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#000; padding:4px 15px; border-radius:20px; border:1px solid var(--gold); font-weight:bold;">${calculateScore(hand)}</div>
                     </div>`;
             });
 
@@ -498,11 +479,11 @@
             document.getElementById('new-round-btn').style.display = isFin ? "inline-block" : "none";
             const msgEl = document.getElementById('tv-result-msg');
             
-            if (isDist) msgEl.innerText = "Chacun distribue ses sanctions en secret... 🤫";
+            if (isDist) msgEl.innerText = "Distribution des sanctions en cours... 🤫";
             else if (isFin) {
                 if (data.dealerHand.length === 2 && calculateScore(data.dealerHand) === 21 && data.randomVictim) {
-                    msgEl.innerText = `🔥 BLACKJACK DU CROUPIER ! ${data.randomVictim} écope de 6 gorgées pièges !`;
-                } else msgEl.innerText = "Fin de manche. Les comptes sont réglés. 🍻";
+                    msgEl.innerText = `🔥 BLACKJACK DU CROUPIER ! ${data.randomVictim} prend 6 gorgées !`;
+                } else msgEl.innerText = "Fin de manche. 🍻";
             } else msgEl.innerText = ""; 
         }
 
@@ -556,9 +537,6 @@
             });
         }
 
-        // ==========================================
-        // SMARTPHONE LOGIQUE DE CONTROLE
-        // ==========================================
         window.joinRoom = async () => {
             myPseudo = document.getElementById('input-pseudo').value.trim();
             currentRoomCode = document.getElementById('input-room').value.trim().toUpperCase();
@@ -588,35 +566,32 @@
             const drinkModal = document.getElementById('mobile-drink-modal'), distribModal = document.getElementById('mobile-distrib-modal');
             const badge = document.getElementById('mobile-status-badge');
 
-            if (data.status === "playing") { drinkModal.style.display = "none"; distribModal.style.display = "none"; badge.innerText = "Manche active"; badge.style.background = "#e67e22";}
+            if (data.status === "playing") { drinkModal.style.display = "none"; distribModal.style.display = "none"; badge.innerText = "En cours"; badge.style.borderColor = "var(--gold)"; }
 
-            // DISTRIB POP-UP
             if (data.status === "distributing") {
                 controls.style.display = "none"; drinkModal.style.display = "none";
                 const amountToGive = data.poolToGive?.[myPseudo] || 0;
 
                 if (amountToGive > 0) {
                     vibrate([150, 100, 150]);
-                    document.getElementById('distrib-modal-title').innerText = "🎁 DISTRIBUTION";
-                    document.getElementById('distrib-modal-title').style.color = "var(--gold)";
-                    document.getElementById('distrib-modal-text').innerText = `Il vous reste ${amountToGive} gorgée(s) à attribuer :`;
+                    document.getElementById('distrib-modal-title').innerText = "DISTRIBUTION";
+                    document.getElementById('distrib-modal-text').innerText = `Il vous reste ${amountToGive} gorgée(s) à donner :`;
                     
                     let btnContainer = document.getElementById('distrib-buttons-container'); btnContainer.innerHTML = "";
                     [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))].forEach(p => {
-                        if (p !== myPseudo) btnContainer.innerHTML += `<button class="btn-give" onclick="window.giveSipTo('${p}')">🎯 Verser à ${p}</button>`;
+                        if (p !== myPseudo) btnContainer.innerHTML += `<button class="btn-give" onclick="window.giveSipTo('${p}')">Donner à ${p}</button>`;
                     });
                     distribModal.style.display = "flex";
                 } else {
-                    document.getElementById('distrib-modal-title').innerText = "⏳ ATTENTE";
-                    document.getElementById('distrib-modal-title').style.color = "rgba(255,255,255,0.5)";
-                    document.getElementById('distrib-modal-text').innerText = "Vos adversaires font leurs comptes d'apothicaire... 🤫";
+                    document.getElementById('distrib-modal-title').innerText = "ATTENTE";
+                    document.getElementById('distrib-modal-title').style.color = "#ccc";
+                    document.getElementById('distrib-modal-text').innerText = "Les autres joueurs distribuent leurs gorgées...";
                     document.getElementById('distrib-buttons-container').innerHTML = "";
                     distribModal.style.display = "flex";
                 }
                 return; 
             } else distribModal.style.display = "none";
 
-            // FINISHED POP-UP
             if (data.status === "finished" && data.realResults?.[myPseudo]) {
                 const res = data.realResults[myPseudo], received = data.receivedSips?.[myPseudo] || 0;
                 let msgTitle = "VERDICT", msgText = "", totalTake = res.take + received;
@@ -624,17 +599,15 @@
                 
                 if (totalTake > 0) {
                     vibrate([400]); iconEl.innerText = "🥃";
-                    msgText += `<span class="take-color" style="font-size: 32px; font-weight:900">Buvez ${totalTake} gorgée(s) !</span>\n`;
-                    if(received > 0 && res.take > 0) msgText += `<small style="opacity:0.5; font-weight:normal">(${res.take} du Croupier + ${received} d'un rival)</small>\n`;
-                    else if (received > 0) msgText += `<small style="opacity:0.5; font-weight:normal">(Quelqu'un vous a ciblé ! 🏴‍☠️)</small>\n`;
-                } else { iconEl.innerText = "👑"; msgText = "Indemne pour cette fois. Savourez."; }
+                    msgText += `<span class="take-color" style="font-size: 28px;">Buvez ${totalTake} gorgée(s) !</span>\n`;
+                    if(received > 0 && res.take > 0) msgText += `<small style="font-size: 16px;">(${res.take} du croupier + ${received} d'un joueur)</small>\n`;
+                    else if (received > 0) msgText += `<small style="font-size: 16px;">(Vous avez été ciblé !)</small>\n`;
+                } else { iconEl.innerText = "👑"; msgText = "Vous êtes sauvé !"; }
 
-                textEl.classList.remove("is-culsec");
                 if (res.culSec) {
                     vibrate([400, 200, 400, 200, 800]); iconEl.innerText = "💀";
-                    msgTitle = "PUNITION SUPRÊME";
-                    msgText = `CUL SEC !!\n(5 défaites d'affilée)\n\n${msgText}`;
-                    textEl.classList.add("is-culsec");
+                    msgTitle = "CUL SEC !";
+                    msgText = `5 défaites d'affilée.\n\n${msgText}`;
                 }
 
                 document.getElementById('drink-modal-title').innerText = msgTitle;
@@ -643,12 +616,11 @@
                 return;
             }
 
-            // EN JEU
             let displayP = myPseudo;
             if (data.status === "playing" && data.players[data.currentTurnIndex] === myPseudo + "_split") displayP = myPseudo + "_split";
 
             const myHand = data.playerHands?.[displayP];
-            if (!myHand) { title.innerText = "Manche en cours..."; controls.style.display = "none"; document.getElementById('mobile-my-cards').innerHTML = ""; document.getElementById('mobile-my-score').innerText = ""; return; }
+            if (!myHand) { title.innerText = "Patience..."; controls.style.display = "none"; document.getElementById('mobile-my-cards').innerHTML = ""; document.getElementById('mobile-my-score').innerText = ""; return; }
 
             const isMyTurn = (data.players[data.currentTurnIndex] === displayP && data.status === "playing");
             const myState = data.playerStates[displayP];
@@ -661,20 +633,20 @@
             
             document.getElementById('mobile-my-score').innerText = `Score : ${calculateScore(myHand)} ${displayP.includes("_split") ? "(Split)" : ""}`;
 
-            if (myState === "buste" || myState === "bust") { title.innerText = "💥 BRÛLÉ ! (Score > 21)"; title.style.color = "var(--danger)"; controls.style.display = "none"; badge.innerText = "Perdu"; badge.style.background = "var(--danger)";}
-            else if (myState === "stand") { title.innerText = "✅ RESTE (En attente)"; title.style.color = "var(--amber)"; controls.style.display = "none"; badge.innerText = "En attente"; badge.style.background = "var(--amber)";}
+            if (myState === "bust") { title.innerText = "💥 BRÛLÉ !"; title.style.color = "var(--danger)"; controls.style.display = "none"; badge.innerText = "Perdu"; badge.style.borderColor = "var(--danger)";}
+            else if (myState === "stand") { title.innerText = "✅ RESTE"; title.style.color = "var(--gold)"; controls.style.display = "none"; badge.innerText = "En attente"; badge.style.borderColor = "var(--gold)";}
             else if (isMyTurn) {
                 vibrate([80]);
-                title.innerText = displayP.includes("_split") ? "À votre Split !" : "C'est votre tour !";
+                title.innerText = "C'est à vous !";
                 title.style.color = "var(--gold)"; controls.style.display = "grid";
-                badge.innerText = "À vous"; badge.style.background = var(--gold); badge.style.color = "#000";
+                badge.innerText = "Votre Tour"; badge.style.background = "var(--gold)"; badge.style.color = "#000";
                 
                 document.getElementById('btn-double').style.display = myHand.length === 2 ? "block" : "none";
                 document.getElementById('btn-split').style.display = (myHand.length === 2 && myHand[0].value === myHand[1].value && !displayP.includes("_split")) ? "block" : "none";
             } else {
                 let waitN = data.players[data.currentTurnIndex] ? data.players[data.currentTurnIndex].replace("_split", " (Split)") : "Banque";
                 title.innerText = `Tour de ${waitN}...`; title.style.color = "white"; controls.style.display = "none";
-                badge.innerText = "Observation"; badge.style.background = "rgba(0,0,0,0.4)";
+                badge.innerText = "Observation"; badge.style.background = "transparent"; badge.style.color = "white";
             }
         }
 
