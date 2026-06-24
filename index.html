@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Version 7 (Split & Double)</title>
+    <title>Blackjack Alcool - Version 8 (Pop-ups de Distribution)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -59,23 +59,26 @@
         #error-msg { color: #ff4d4d; font-weight: bold; margin-top: 10px; }
         #tv-result-msg { font-size: 28px; color: #ffb703; font-weight: bold; margin-top: 20px; }
 
-        /* Distribution Anonyme */
-        .distrib-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; width: 100%; max-width: 250px; }
-        .btn-give { background-color: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
-        .btn-give:hover { background-color: #3e8e41; }
-
-        /* Pop-up Mobile */
-        #mobile-drink-modal {
+        /* Styles Modals Plein Écran (Résultat & Distribution) */
+        .fullscreen-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; 
             justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
             animation: fadeIn 0.4s ease-out;
         }
-        #drink-modal-title { font-size: 40px; margin-bottom: 10px; text-transform: uppercase; }
-        #drink-modal-text { font-size: 28px; font-weight: bold; color: white; text-align: center; white-space: pre-line; line-height: 1.5; }
+        
+        /* Textes dans les pop-ups */
+        .modal-title { font-size: 40px; margin-bottom: 10px; text-transform: uppercase; text-align: center; }
+        .modal-text { font-size: 28px; font-weight: bold; color: white; text-align: center; white-space: pre-line; line-height: 1.5; margin-bottom: 25px; }
+        
         .take-color { color: #f44336; }
         .give-color { color: #4CAF50; }
         .is-culsec { color: #f44336 !important; font-size: 35px !important; text-shadow: 0 0 15px red; }
+
+        /* Boutons de distribution dans le modal */
+        .distrib-btn-group { display: flex; flex-direction: column; gap: 15px; width: 100%; max-width: 300px; }
+        .btn-give { background-color: #4CAF50; color: white; padding: 15px; font-size: 20px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.2s;}
+        .btn-give:hover { background-color: #3e8e41; transform: scale(1.05); }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
@@ -144,16 +147,20 @@
             <button class="btn-game btn-double" id="btn-double" onclick="window.double()">DOUBLE</button>
             <button class="btn-game btn-split" id="btn-split" onclick="window.split()">SPLIT</button>
         </div>
-
-        <div id="mobile-distribution-zone" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
-            <h3 style="color:#ffb703;" id="distrib-count-text"></h3>
-            <div class="distrib-btn-group" id="distrib-buttons-container"></div>
-        </div>
     </div>
 
-    <div id="mobile-drink-modal">
-        <h2 id="drink-modal-title">RÉSULTAT</h2>
-        <p id="drink-modal-text"></p>
+    <!-- NOUVEAU : POP-UP DISTRIBUTION / ATTENTE MOBILE -->
+    <div id="mobile-distrib-modal" class="fullscreen-modal">
+        <h2 id="distrib-modal-title" class="modal-title"></h2>
+        <p id="distrib-modal-text" class="modal-text"></p>
+        <div class="distrib-btn-group" id="distrib-buttons-container"></div>
+    </div>
+
+    <!-- POP-UP RÉSULTAT MOBILE -->
+    <div id="mobile-drink-modal" class="fullscreen-modal">
+        <h2 id="drink-modal-title" class="modal-title">RÉSULTAT</h2>
+        <p id="drink-modal-text" class="modal-text"></p>
+        <!-- On laisse un bouton fermer optionnel si jamais on veut revoir ses cartes -->
         <button class="btn btn-main" onclick="document.getElementById('mobile-drink-modal').style.display='none'" style="margin-top:20px;">Fermer</button>
     </div>
 
@@ -248,7 +255,7 @@
                 let updates = { tvPing: now }; 
 
                 localRoomData.players.forEach(p => {
-                    if (p.includes("_split")) return; // Le ping est géré par la main principale
+                    if (p.includes("_split")) return; 
                     const lastPing = localRoomData.pings?.[p] || now;
                     const state = localRoomData.playerStates?.[p];
                     
@@ -301,7 +308,6 @@
 
         window.startGame = async () => {
             const now = Date.now();
-            // Nettoyage des joueurs inactifs ET des mains splitées de la manche précédente
             let activePlayers = localRoomData.players.filter(p => {
                 if (p.includes("_split")) return false; 
                 const isLeft = localRoomData.playerStates?.[p] === "left";
@@ -362,7 +368,6 @@
                     stateText = "🤫 Choix des cibles...";
                 } else if (isFinished && data.results && data.results[p]) {
                     const res = data.results[p];
-                    const realP = p.replace("_split", "");
                     
                     if (res.culSec) {
                         stateText = "🚨 CUL SEC !";
@@ -491,12 +496,11 @@
                 poolToGive[realP] += give;
             });
 
-            // Vérification Cul Sec sur les joueurs réels
+            // Vérification Cul Sec
             Object.keys(realResults).forEach(realP => {
                 if (streaks[realP] >= 5) {
                     realResults[realP].culSec = true;
                     streaks[realP] = 0;
-                    // On taggue la main principale pour l'affichage TV
                     if (results[realP]) results[realP].culSec = true;
                 }
             });
@@ -535,6 +539,7 @@
                         else {
                             window.showScreen('screen-mobile-lobby');
                             document.getElementById('mobile-drink-modal').style.display = "none";
+                            document.getElementById('mobile-distrib-modal').style.display = "none";
                         }
                     });
                 } else { document.getElementById('error-msg').innerText = "Code introuvable."; }
@@ -548,13 +553,16 @@
             
             const title = document.getElementById('mobile-status-title');
             const controls = document.getElementById('mobile-controls');
+            
             const drinkModal = document.getElementById('mobile-drink-modal');
             const textEl = document.getElementById('drink-modal-text');
-            const distribZone = document.getElementById('mobile-distribution-zone');
+            
+            const distribModal = document.getElementById('mobile-distrib-modal');
 
-            // Cache le pop-up si une nouvelle manche démarre
+            // Cache les pop-ups si une nouvelle manche démarre
             if (data.status === "playing") {
                 drinkModal.style.display = "none";
+                distribModal.style.display = "none";
             }
 
             // --- PHASE DISTRIBUTING (ANONYME) ---
@@ -565,10 +573,9 @@
                 const amountToGive = data.poolToGive?.[myPseudo] || 0;
 
                 if (amountToGive > 0) {
-                    title.innerText = "🎁 DISTRIBUE TES GORGÉES !";
-                    title.style.color = "#4CAF50";
-                    distribZone.style.display = "flex";
-                    document.getElementById('distrib-count-text').innerText = `Il te reste ${amountToGive} gorgée(s) à distribuer :`;
+                    document.getElementById('distrib-modal-title').innerText = "🎁 CIBLE VERROUILLÉE";
+                    document.getElementById('distrib-modal-title').style.color = "#4CAF50";
+                    document.getElementById('distrib-modal-text').innerText = `Il te reste ${amountToGive} gorgée(s) à distribuer :`;
                     
                     const btnContainer = document.getElementById('distrib-buttons-container');
                     btnContainer.innerHTML = "";
@@ -578,18 +585,22 @@
                             btnContainer.innerHTML += `<button class="btn-give" onclick="window.giveSipTo('${p}')">👉 Donner à ${p}</button>`;
                         }
                     });
+                    distribModal.style.display = "flex";
                 } else {
-                    title.innerText = "⏳ Gorgées en cours de distribution par les autres joueurs...";
-                    title.style.color = "white";
-                    distribZone.style.display = "none";
+                    document.getElementById('distrib-modal-title').innerText = "⏳ PATIENCE...";
+                    document.getElementById('distrib-modal-title').style.color = "#ffb703";
+                    document.getElementById('distrib-modal-text').innerText = "Gorgées en cours de distribution par les autres joueurs...\n\nPrépare ton verre au cas où 🤫";
+                    document.getElementById('distrib-buttons-container').innerHTML = "";
+                    distribModal.style.display = "flex";
                 }
                 return; 
             } else {
-                distribZone.style.display = "none";
+                distribModal.style.display = "none";
             }
 
             // --- PHASE FINISHED (RÉVÉLATION) ---
             if (data.status === "finished" && data.realResults && data.realResults[myPseudo]) {
+                distribModal.style.display = "none";
                 const res = data.realResults[myPseudo];
                 const received = data.receivedSips?.[myPseudo] || 0;
                 let msgTitle = "RÉSULTAT TOTAL";
@@ -658,7 +669,6 @@
                 title.style.color = "#ffb703";
                 controls.style.display = "flex";
                 
-                // Gestion Split / Double
                 let btnDouble = document.getElementById('btn-double');
                 let btnSplit = document.getElementById('btn-split');
                 if (myHand.length === 2) {
