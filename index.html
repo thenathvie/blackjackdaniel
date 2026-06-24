@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Version 3 (Multi-écrans)</title>
+    <title>Blackjack Alcool - Version 3.1 (Sécurité & Déconnexions)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -77,12 +77,11 @@
 
     <div id="screen-mobile-lobby" class="screen lobby-box">
         <h2>Connecté ! 🎉</h2>
-        <p>Regarde l'écran de la TV. En attente du lancement par le croupier...</p>
+        <p>Regarde l'écran de la TV. En attente du lancement...</p>
     </div>
 
     <div id="screen-tv-lobby" class="screen lobby-box">
         <h2>Salon de jeu</h2>
-        <p>Connectez vos téléphones sur ce site et entrez le code :</p>
         <div id="display-room-code" class="room-code">----</div>
         <h3>Joueurs (<span id="player-count">0</span>/6) :</h3>
         <ul id="tv-player-list" class="player-list"></ul>
@@ -115,7 +114,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCEMdQpb7X9t_9wxMtZiX_GQJZgjSbcuKM",
@@ -130,13 +129,11 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Variables globales
         let currentRoomCode = "";
         let myPseudo = "";
         let isTV = false;
-        let localRoomData = null; // Stocke les données Firebase localement pour la logique
+        let localRoomData = null;
 
-        // --- OUTILS DE JEU ---
         function calculateScore(hand) {
             let score = 0; let aces = 0;
             for (let card of hand) {
@@ -161,6 +158,62 @@
         };
 
         // ==========================================
+        // DÉCONNEXIONS ET INACTIVITÉ
+        // ==========================================
+
+        // 1. Fermeture brutale de l'onglet (TV ou Joueur)
+        window.addEventListener('beforeunload', () => {
+            if (currentRoomCode) {
+                if (isTV) {
+                    updateDoc(doc(db, "rooms", currentRoomCode), { status: "closed" }).catch(()=>{});
+                } else if (myPseudo && localRoomData) {
+                    if (localRoomData.status === "waiting") {
+                        updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayRemove(myPseudo) }).catch(()=>{});
+                    } else if (localRoomData.status === "playing") {
+                        updateDoc(doc(db, "rooms", currentRoomCode), { [`playerStates.${myPseudo}`]: "left" }).catch(()=>{});
+                    }
+                }
+            }
+        });
+
+        // 2. Ping mobile (toutes les 5 secondes)
+        setInterval(() => {
+            if (!isTV && myPseudo && currentRoomCode && localRoomData && localRoomData.status !== "closed") {
+                updateDoc(doc(db, "rooms", currentRoomCode), {
+                    [`pings.${myPseudo}`]: Date.now()
+                }).catch(()=>{});
+            }
+        }, 5000);
+
+        // 3. Moniteur TV (Vérifie les joueurs inactifs)
+        setInterval(async () => {
+            if (isTV && currentRoomCode && localRoomData && localRoomData.status !== "closed") {
+                const now = Date.now();
+                let updates = {};
+                let modified = false;
+
+                localRoomData.players.forEach(p => {
+                    const lastPing = localRoomData.pings?.[p] || now;
+                    const state = localRoomData.playerStates?.[p];
+                    
+                    if (now - lastPing > 30000 && state !== "left") {
+                        modified = true;
+                        if (localRoomData.status === "waiting") {
+                            updates.players = arrayRemove(p); // Retire du lobby
+                        } else if (localRoomData.status === "playing") {
+                            updates[`playerStates.${p}`] = "left"; // Marque comme abandonné en jeu
+                        }
+                    }
+                });
+
+                if (modified) {
+                    try { await updateDoc(doc(db, "rooms", currentRoomCode), updates); } catch(e){}
+                }
+            }
+        }, 5000);
+
+
+        // ==========================================
         // LOGIQUE TV (CROUPIER)
         // ==========================================
         window.initTVMode = async () => {
@@ -169,7 +222,7 @@
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let i = 0; i < 4; i++) currentRoomCode += chars.charAt(Math.floor(Math.random() * chars.length));
             
-            await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [] });
+            await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [], pings: {} });
             document.getElementById('display-room-code').innerText = currentRoomCode;
             window.showScreen('screen-tv-lobby');
 
@@ -195,13 +248,13 @@
             const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
             let deck = [];
             for(let s of suits) for(let v of values) deck.push({suit: s, value: v});
-            deck = deck.sort(() => Math.random() - 0.5); // Mélange simple
+            deck = deck.sort(() => Math.random() - 0.5);
 
             let playerHands = {};
             let playerStates = {};
             localRoomData.players.forEach(p => {
                 playerHands[p] = [deck.pop(), deck.pop()];
-                playerStates[p] = "playing"; // "playing", "stand", "bust"
+                playerStates[p] = "playing"; 
             });
             let dealerHand = [deck.pop(), deck.pop()];
 
@@ -213,9 +266,9 @@
         async function updateGameTV() {
             window.showScreen('screen-tv-game');
             const data = localRoomData;
+            const isFinished = data.status === "finished";
             
             // Affichage dealer
-            const isFinished = data.status === "finished";
             let dealerCardsHtml = "";
             data.dealerHand.forEach((c, i) => { dealerCardsHtml += createHtmlCard(c, (!isFinished && i===1)); });
             document.getElementById('tv-dealer-cards').innerHTML = dealerCardsHtml;
@@ -230,10 +283,9 @@
                 const isCurrentTurn = (index === data.currentTurnIndex && !isFinished);
                 
                 let cardsHtml = hand.map(c => createHtmlCard(c)).join('');
-                let matClass = `player-mat ${isCurrentTurn ? 'active-turn' : ''} ${state === 'bust' ? 'bust' : ''}`;
+                let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : state === 'left' ? "❌ DÉCONNECTÉ" : "";
+                let matClass = `player-mat ${isCurrentTurn ? 'active-turn' : ''} ${state === 'bust' || state === 'left' ? 'bust' : ''}`;
                 
-                let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : "";
-
                 playersArea.innerHTML += `
                     <div class="${matClass}">
                         <h3>${p} (Score: ${calculateScore(hand)})</h3>
@@ -242,8 +294,15 @@
                     </div>`;
             });
 
-            // Gérer le tour automatique du Croupier si tous les joueurs ont joué
-            if (data.currentTurnIndex >= data.players.length && data.status === "playing" && !data.dealerPlayed) {
+            // Gérer le passage de tour si le joueur actuel a quitté
+            if (data.currentTurnIndex < data.players.length) {
+                let currentPlayer = data.players[data.currentTurnIndex];
+                if (data.playerStates[currentPlayer] === "left") {
+                    updateDoc(doc(db, "rooms", currentRoomCode), { currentTurnIndex: data.currentTurnIndex + 1 });
+                }
+            } 
+            // Gérer le tour automatique du Croupier
+            else if (data.status === "playing" && !data.dealerPlayed) {
                 playDealerTurn();
             }
 
@@ -277,11 +336,25 @@
                 const roomRef = doc(db, "rooms", currentRoomCode);
                 const roomSnap = await getDoc(roomRef);
                 if (roomSnap.exists()) {
-                    await updateDoc(roomRef, { players: arrayUnion(myPseudo) });
+                    await updateDoc(roomRef, { players: arrayUnion(myPseudo), [`pings.${myPseudo}`]: Date.now() });
                     window.showScreen('screen-mobile-lobby');
                     
                     onSnapshot(roomRef, (docSnap) => {
                         localRoomData = docSnap.data();
+                        
+                        // Sécurité: Si la table est fermée par le croupier
+                        if (localRoomData.status === "closed") {
+                            alert("Le croupier a fermé la table.");
+                            window.location.reload();
+                            return;
+                        }
+                        // Sécurité: Si le joueur a été viré pour inactivité
+                        if (localRoomData.playerStates && localRoomData.playerStates[myPseudo] === "left") {
+                            alert("Tu as été déconnecté pour inactivité (30s).");
+                            window.location.reload();
+                            return;
+                        }
+
                         if (localRoomData.status === "playing" || localRoomData.status === "finished") updateGameMobile();
                         else window.showScreen('screen-mobile-lobby');
                     });
@@ -296,7 +369,6 @@
             const isMyTurn = (currentPlayer === myPseudo && data.status === "playing");
             const myState = data.playerStates[myPseudo];
 
-            // Afficher ma main
             const myHand = data.playerHands[myPseudo];
             document.getElementById('mobile-my-cards').innerHTML = myHand.map(c => createHtmlCard(c)).join('');
             document.getElementById('mobile-my-score').innerText = `Mon Score : ${calculateScore(myHand)}`;
@@ -339,7 +411,7 @@
             
             if (score > 21) {
                 updates[`playerStates.${myPseudo}`] = "bust";
-                updates.currentTurnIndex = data.currentTurnIndex + 1; // Passe au joueur suivant
+                updates.currentTurnIndex = data.currentTurnIndex + 1; 
             }
             
             await updateDoc(doc(db, "rooms", currentRoomCode), updates);
@@ -348,7 +420,7 @@
         window.stand = async () => {
             await updateDoc(doc(db, "rooms", currentRoomCode), {
                 [`playerStates.${myPseudo}`]: "stand",
-                currentTurnIndex: localRoomData.currentTurnIndex + 1 // Passe au joueur suivant
+                currentTurnIndex: localRoomData.currentTurnIndex + 1 
             });
         };
     </script>
