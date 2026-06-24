@@ -56,24 +56,6 @@
             --glass-border: rgba(255, 102, 0, 0.6);
         }
 
-        /* THÈME : L'INFILTRÉ */
-        body.theme-infiltre {
-            --bg-color: #0b0c10;
-            --table-color: radial-gradient(circle at 50% 20%, #1f2833 0%, #0b0c10 100%);
-            --gold: #66fcf1;
-            --gold-metallic: linear-gradient(135deg, #66fcf1, #45f3ff, #1f2833, #fff, #00a8cc);
-            --glass-border: rgba(102, 252, 241, 0.5);
-        }
-
-        /* THÈME : PACTE DE SANG */
-        body.theme-pacte-de-sang {
-            --bg-color: #1a0005;
-            --table-color: radial-gradient(circle at 50% 20%, #5c0011 0%, #1a0005 100%);
-            --gold: #ff3366;
-            --gold-metallic: linear-gradient(135deg, #ff3366, #ff6699, #990022, #fff, #4a000e);
-            --glass-border: rgba(255, 51, 102, 0.6);
-        }
-
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
             font-family: 'Montserrat', sans-serif;
@@ -142,7 +124,6 @@
         .player-mat.active-turn { border-color: var(--gold); background: rgba(0, 0, 0, 0.9); box-shadow: 0 0 20px var(--glass-border); transform: translateY(-3px); }
         .player-mat.bust { opacity: 0.5; filter: grayscale(80%); border-color: var(--danger); }
         .player-mat.target { border-color: #ff6600; box-shadow: 0 0 30px #ff6600; animation: firePulse 1s infinite;}
-        .player-mat.linked-blood { border-color: #ff3366; box-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
         
         @keyframes firePulse { 0% { box-shadow: 0 0 10px #ff6600; } 50% { box-shadow: 0 0 30px #ff3300, inset 0 0 15px #ff6600; } 100% { box-shadow: 0 0 10px #ff6600; } }
 
@@ -150,7 +131,6 @@
         .card { background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%); color: #000; width: 55px; height: 80px; border-radius: 5px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 900; box-shadow: -3px 3px 8px rgba(0,0,0,0.5); border: 1px solid #ccc; position: relative; margin-left: -20px; }
         .card.red { color: var(--danger); }
         .card.hidden { background: repeating-linear-gradient(45deg, #111, #111 6px, #000 6px, #000 12px); color: transparent; border: 2px solid var(--gold); }
-        .card.hidden::after { content: '?' !important; color: var(--gold) !important; font-size: 28px !important; transform: none !important; position: static !important; opacity: 0.5; }
         .card:not(.hidden)::before { content: attr(data-suit); position: absolute; top: 2px; left: 4px; font-size: 12px; line-height:1;}
         .card:not(.hidden)::after { content: attr(data-suit); position: absolute; bottom: 2px; right: 4px; font-size: 12px; transform: rotate(180deg); line-height:1;}
         .card .center-suit { font-size: 35px; opacity: 0.15; position: absolute; }
@@ -173,7 +153,7 @@
         .tv-code-badge { font-weight: 900; background: #000; padding: 6px 15px; border-radius: 6px; border: 1px solid var(--gold); color: var(--gold); font-size: 1em; letter-spacing: 2px; transition: 1s ease;}
 
         /* TEST BUTTONS */
-        .admin-controls { position: absolute; top: 0; left: 0; display: flex; gap: 5px; opacity: 0.3; transition: 0.2s; z-index: 9999;}
+        .admin-controls { position: absolute; top: 0; left: 0; display: flex; gap: 5px; opacity: 0.3; transition: 0.2s;}
         .admin-controls:hover { opacity: 1; }
         .btn-admin { font-size: 10px; padding: 5px 8px; background: #333; color: #fff; border: 1px solid #666; cursor: pointer; border-radius: 4px;}
 
@@ -192,16 +172,8 @@
 
 <div id="app-container">
 
-    <div id="screen-loading" class="screen active">
-        <div class="lobby-box">
-            <h1 style="font-size: 3em; margin-bottom: 0;">Blackjack</h1>
-            <div class="prevention" style="margin-bottom: 20px;">Édition Ultime</div>
-            <div style="width: 40px; height: 40px; border: 3px solid rgba(212,175,55,0.1); border-top: 3px solid var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 20px auto;"></div>
-            <p id="loading-text" style="color: var(--gold); font-weight: 800; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8em;">Mélange des cartes...</p>
-        </div>
-    </div>
-
-    <div id="screen-home" class="screen">
+    <!-- ACCUEIL -->
+    <div id="screen-home" class="screen active">
         <div class="lobby-box">
             <h1>Blackjack</h1>
             <div class="prevention" style="margin-bottom: 20px;">Édition Ultime</div>
@@ -211,6 +183,7 @@
         </div>
     </div>
 
+    <!-- REJOINDRE -->
     <div id="screen-join" class="screen">
         <div class="lobby-box">
             <h2>Rejoindre</h2>
@@ -222,6 +195,7 @@
         </div>
     </div>
 
+    <!-- LOBBY MOBILE -->
     <div id="screen-mobile-lobby" class="screen">
         <div class="lobby-box">
             <div style="font-size: 3em; margin-bottom: 5px;">🥃</div>
@@ -230,6 +204,7 @@
         </div>
     </div>
 
+    <!-- DECO -->
     <div id="screen-disconnected" class="screen">
         <div class="lobby-box" style="border-color: var(--danger);">
             <h2 style="color: var(--danger);">🚨 Table Fermée</h2>
@@ -238,6 +213,7 @@
         </div>
     </div>
 
+    <!-- LOBBY TV -->
     <div id="screen-tv-lobby" class="screen">
         <div class="lobby-box" style="max-width: 800px;">
             <h2>CODE D'ACCÈS VIP</h2>
@@ -248,15 +224,15 @@
         </div>
     </div>
 
+    <!-- JEU TV -->
     <div id="screen-tv-game" class="screen">
         <div class="tv-top-bar">
+            <!-- ADMIN BOUTONS POUR FORCER LES EVENEMENTS -->
             <div class="admin-controls" id="tv-admin-controls" style="display:none;">
                 <button class="btn-admin" onclick="forceEvent('happy_hour')">X2</button>
                 <button class="btn-admin" onclick="forceEvent('red_alert')">Mort</button>
                 <button class="btn-admin" onclick="forceEvent('green_carpet')">Vegas</button>
                 <button class="btn-admin" onclick="forceEvent('russian_roulette')">Roulette</button>
-                <button class="btn-admin" onclick="forceEvent('infiltre')">Infiltré</button>
-                <button class="btn-admin" onclick="forceEvent('pacte_de_sang')">Pacte</button>
                 <button class="btn-admin" onclick="forceEvent(null)">Normal</button>
             </div>
             <div class="tv-code-badge">TABLE: <span id="tv-game-room-code"></span></div>
@@ -275,6 +251,7 @@
         <button id="new-round-btn" class="btn btn-main" style="display:none; font-size: 1em; padding: 12px 25px; margin-top: 10px; max-width: 300px;" onclick="window.startGame()">Manche Suivante 🔄</button>
     </div>
 
+    <!-- JEU MOBILE -->
     <div id="screen-mobile-game" class="screen">
         <div class="lobby-box" style="padding: 15px; width: 100%; border: none; background: transparent; box-shadow: none;">
             <div id="mobile-event-banner" class="event-banner" style="font-size: 0.85em; margin-bottom: 10px;"></div>
@@ -299,17 +276,20 @@
         </div>
     </div>
 
+    <!-- MODAL REVEAL FLASH (MOBILE) -->
     <div id="mobile-reveal-modal" class="fullscreen-modal" style="z-index: 2000;">
         <div id="reveal-icon" style="font-size: 5em; margin-bottom: 10px; animation: popIn 0.3s ease-out;"></div>
         <h1 id="reveal-title" style="font-size: 3em; margin: 0; text-transform: uppercase; font-family: 'Playfair Display', serif; animation: popIn 0.4s ease-out;"></h1>
     </div>
 
+    <!-- MODAL DISTRIBUTION (MOBILE) -->
     <div id="mobile-distrib-modal" class="fullscreen-modal">
         <h2 id="distrib-modal-title" class="modal-title"></h2>
         <p id="distrib-modal-text" class="modal-text"></p>
         <div style="width: 100%; max-width: 300px;" id="distrib-buttons-container"></div>
     </div>
 
+    <!-- MODAL RÉSULTAT (MOBILE) -->
     <div id="mobile-drink-modal" class="fullscreen-modal">
         <div style="font-size: 4em; margin-bottom: 5px;" id="drink-modal-icon">🍷</div>
         <h2 id="drink-modal-title" class="modal-title">VERDICT</h2>
@@ -343,45 +323,6 @@
         let lastLobbyPlayersHtml = "", lastDealerCardsHtml = "", lastPlayersAreaHtml = "", lastMobileCardsHtml = "";
         let isRevealing = false;
         let lastStatus = "waiting";
-
-        // MOTEUR AUDIO PROCÉDURAL (Pas de fichiers mp3 externes nécessaires !)
-        let audioCtx = null;
-        function playProceduralSound(type) {
-            if (!isTV) return; // Seule la TV diffuse l'ambiance sonore globale
-            try {
-                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                const now = audioCtx.currentTime;
-                
-                if (type === 'deal') {
-                    osc.type = 'triangle'; osc.frequency.setValueAtTime(440, now);
-                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.08);
-                    gain.gain.setValueAtTime(0.12, now); gain.gain.linearRampToValueAtTime(0, now + 0.08);
-                    osc.start(now); osc.stop(now + 0.08);
-                } else if (type === 'bust') {
-                    osc.type = 'sawtooth'; osc.frequency.setValueAtTime(140, now);
-                    osc.frequency.linearRampToValueAtTime(30, now + 0.4);
-                    gain.gain.setValueAtTime(0.25, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
-                    osc.start(now); osc.stop(now + 0.4);
-                } else if (type === 'blackjack') {
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(523.25, now); // C5
-                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
-                    osc.frequency.setValueAtTime(783.99, now + 0.16); // G5
-                    osc.frequency.setValueAtTime(1046.50, now + 0.24); // C6
-                    gain.gain.setValueAtTime(0.2, now); gain.gain.linearRampToValueAtTime(0, now + 0.4);
-                    osc.start(now); osc.stop(now + 0.4);
-                } else if (type === 'suspense') {
-                    osc.type = 'sine'; osc.frequency.setValueAtTime(55, now);
-                    gain.gain.setValueAtTime(0.4, now); gain.gain.linearRampToValueAtTime(0, now + 0.25);
-                    osc.start(now); osc.stop(now + 0.25);
-                }
-            } catch(e) { console.error("Audio error", e); }
-        }
 
         const vibrate = (pattern) => { if (navigator.vibrate) navigator.vibrate(pattern); };
 
@@ -494,7 +435,7 @@
             
             if (nextEvt === null && roundsCounter >= 10) {
                 if (Math.random() < 0.25) {
-                    const evts = ["happy_hour", "red_alert", "green_carpet", "russian_roulette", "infiltre", "pacte_de_sang"];
+                    const evts = ["happy_hour", "red_alert", "green_carpet", "russian_roulette"];
                     nextEvt = evts[Math.floor(Math.random() * evts.length)];
                 }
             }
@@ -505,14 +446,6 @@
                 target = activePlayers[Math.floor(Math.random() * activePlayers.length)];
             }
 
-            let linked = [];
-            if (nextEvt === "pacte_de_sang" && activePlayers.length >= 2) {
-                let shuffled = [...activePlayers].sort(() => Math.random() - 0.5);
-                linked = [shuffled[0], shuffled[1]];
-            } else if (nextEvt === "pacte_de_sang") {
-                nextEvt = null; // Pas assez de joueurs pour faire un pacte
-            }
-
             let deck = [];
             for(let s of ['♠', '♥', '♣', '♦']) for(let v of ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']) deck.push({suit: s, value: v});
             deck = deck.sort(() => Math.random() - 0.5);
@@ -521,18 +454,17 @@
             activePlayers.forEach(p => { playerHands[p] = [deck.pop(), deck.pop()]; playerStates[p] = "playing"; });
             
             lastDealerCardsHtml = ""; lastPlayersAreaHtml = ""; lastMobileCardsHtml = "";
-            window.lastTotalCardsCount = 0; window.lastBustsCount = 0; window.lastStatusForSound = "playing";
 
             await updateDoc(doc(db, "rooms", currentRoomCode), {
                 players: activePlayers, status: "playing", deck, playerHands, playerStates, 
                 dealerHand: [deck.pop(), deck.pop()], currentTurnIndex: 0, dealerPlayed: false, dealerPlaying: false,
                 results: {}, realResults: {}, poolToGive: {}, receivedSips: {}, doubled: {},
-                currentEvent: nextEvt, eventTarget: target, linkedPlayers: linked, roundsSinceLastEvent: roundsCounter, nextForcedEvent: null
+                currentEvent: nextEvt, eventTarget: target, roundsSinceLastEvent: roundsCounter, nextForcedEvent: null
             });
         };
 
         function updateThemeAndBanner(data) {
-            document.body.className = data.currentEvent ? `theme-${data.currentEvent.replace(/_/g, '-')}` : '';
+            document.body.className = data.currentEvent ? `theme-${data.currentEvent.replace('_', '-')}` : '';
             const tvBanner = document.getElementById('tv-event-banner');
             const mobileBanner = document.getElementById('mobile-event-banner');
             
@@ -542,8 +474,6 @@
                 if (data.currentEvent === "red_alert") msg = "🚨 ALERTE ROUGE : LA MOINDRE DÉFAITE = CUL SEC ! 🚨";
                 if (data.currentEvent === "green_carpet") msg = "🎰 TAPIS VERT : OBLIGATION DE TIRER JUSQU'À 16 ! 🎰";
                 if (data.currentEvent === "russian_roulette") msg = `☠️ ROULETTE RUSSE : TOUTES VOS GORGÉES GAGNÉES VONT VERS ${data.eventTarget} ! ☠️`;
-                if (data.currentEvent === "infiltre") msg = "🃏 L'INFILTRÉ : LA DEUXIÈME CARTE EST SECRÈTE ET CACHÉE SUR LA TV ! 🃏";
-                if (data.currentEvent === "pacte_de_sang") msg = `🩸 PACTE DE SANG : ${data.linkedPlayers?.[0]} ET ${data.linkedPlayers?.[1]} SONT LIÉS PAR LA VIE ET PAR LE VERRE ! 🩸`;
                 
                 if(tvBanner) { tvBanner.innerText = msg; tvBanner.classList.add('active'); }
                 if(mobileBanner) { mobileBanner.innerText = msg; mobileBanner.classList.add('active'); }
@@ -560,28 +490,6 @@
             
             updateThemeAndBanner(data);
 
-            // GESTIONNAIRE AUDIO AUDIO-CONTEKTE REACTIF
-            let totalCards = (data.dealerHand?.length || 0);
-            let currentBusts = 0;
-            data.players.forEach(p => { 
-                totalCards += (data.playerHands?.[p]?.length || 0); 
-                if (data.playerStates?.[p] === 'bust') currentBusts++;
-            });
-            if (calculateScore(data.dealerHand) > 21) currentBusts++;
-
-            if (window.lastTotalCardsCount !== undefined && totalCards > window.lastTotalCardsCount) { playProceduralSound('deal'); }
-            window.lastTotalCardsCount = totalCards;
-
-            if (window.lastBustsCount !== undefined && currentBusts > window.lastBustsCount) { playProceduralSound('bust'); }
-            window.lastBustsCount = currentBusts;
-
-            if (isDist && window.lastStatusForSound === "playing") {
-                let hasBJ = (data.dealerHand?.length === 2 && calculateScore(data.dealerHand) === 21);
-                data.players.forEach(p => { if (data.playerHands?.[p]?.length === 2 && calculateScore(data.playerHands[p]) === 21) hasBJ = true; });
-                if (hasBJ) playProceduralSound('blackjack');
-            }
-            window.lastStatusForSound = data.status;
-
             const hideSecond = (!isFin && !isDist && !data.dealerPlaying);
             let newDealerCardsHtml = data.dealerHand.map((c, i) => createHtmlCard(c, (hideSecond && i===1), i, data.dealerHand.length)).join('');
             if (newDealerCardsHtml !== lastDealerCardsHtml) { document.getElementById('tv-dealer-cards').innerHTML = newDealerCardsHtml; lastDealerCardsHtml = newDealerCardsHtml; }
@@ -596,7 +504,6 @@
                 const state = data.playerStates[p];
                 const isCurrent = (index === data.currentTurnIndex && !isFin && !isDist && !data.dealerPlaying);
                 const isTarget = (data.currentEvent === "russian_roulette" && p.replace("_split", "") === data.eventTarget);
-                const isBloodLinked = (data.currentEvent === "pacte_de_sang" && data.linkedPlayers?.includes(p.replace("_split", "")));
                 
                 let stateText = state === 'bust' ? "💥 BRÛLÉ" : state === 'stand' ? "✅ RESTE" : state === 'left' ? "❌ PARTI" : "";
                 if (data.doubled?.[p]) stateText += " (x2)";
@@ -609,19 +516,12 @@
                     else stateText = "🛡️ SAUVÉ";
                 }
 
-                // REGLE DE L'INFILTRÉ : Masquage visuel de la 2ème carte sur la TV
-                let isInfiltreHidden = (data.currentEvent === "infiltre" && !isFin && !isDist);
-                let scoreDisplay = calculateScore(hand);
-                if (isInfiltreHidden) {
-                    scoreDisplay = `${calculateScore([hand[0]])} + ?`;
-                }
-
                 newPlayersAreaHtml += `
-                    <div class="player-mat ${isCurrent ? 'active-turn' : ''} ${['bust', 'left'].includes(state) ? 'bust' : ''} ${isTarget ? 'target' : ''} ${isBloodLinked ? 'linked-blood' : ''}">
+                    <div class="player-mat ${isCurrent ? 'active-turn' : ''} ${['bust', 'left'].includes(state) ? 'bust' : ''} ${isTarget ? 'target' : ''}">
                         <h3>${p.replace("_split", " (Split)")}</h3>
                         <div style="color:var(--gold); font-weight:bold; font-size:0.85em; height:16px; margin-bottom:5px;">${stateText}</div>
-                        <div class="cards-container">${hand.map((c, i) => createHtmlCard(c, (isInfiltreHidden && i === 1), i, hand.length)).join('')}</div>
-                        <div style="position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#000; padding:4px 15px; border-radius:20px; border:1px solid var(--gold); font-weight:bold;">${scoreDisplay}</div>
+                        <div class="cards-container">${hand.map((c, i) => createHtmlCard(c, false, i, hand.length)).join('')}</div>
+                        <div style="position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); background:#000; padding:4px 15px; border-radius:20px; border:1px solid var(--gold); font-weight:bold;">${calculateScore(hand)}</div>
                     </div>`;
             });
 
@@ -648,18 +548,20 @@
             await updateDoc(doc(db, "rooms", currentRoomCode), { dealerPlaying: true });
 
             let data = localRoomData, dHand = [...data.dealerHand], deck = [...data.deck];
+            
             await new Promise(r => setTimeout(r, 1200));
             
             while(calculateScore(dHand) < 17) {
                 let currentScore = calculateScore(dHand);
                 let delay = currentScore >= 16 ? 2500 : 1200;
-                if (currentScore >= 16) playProceduralSound('suspense'); // Petit coup de pression sonore
                 await new Promise(r => setTimeout(r, delay));
                 dHand.push(deck.pop());
                 await updateDoc(doc(db, "rooms", currentRoomCode), { dealerHand: dHand, deck: deck });
             }
             
             await new Promise(r => setTimeout(r, 1500));
+            
+            // Re-fetch des données fraiches pour les calculs de fin
             data = localRoomData;
             
             let dScore = calculateScore(dHand), isDealerBJNatural = (dHand.length === 2 && dScore === 21);
@@ -684,8 +586,8 @@
                 let pScore = calculateScore(data.playerHands[p]), isPlayerBJNatural = (data.playerHands[p].length === 2 && pScore === 21);
                 let outcome = "", take = 0, give = 0;
                 
-                if (data.playerStates[p] === "collab_bust" || data.playerStates[p] === "bust") { outcome = "bust"; take = 3; }
-                else if (pScore === 21 && dScore === 21) { outcome = "bj_both"; take = 3; give = 3; } 
+                if (data.playerStates[p] === "bust") { outcome = "bust"; take = 3; }
+                else if (pScore === 21 && dScore === 21) { outcome = "bj_both"; take = 3; give = 3; } // NOUVELLE REGLE EGALITE 21
                 else if (isPlayerBJNatural) { outcome = "bj_player"; give = 6; }
                 else if (isDealerBJNatural) { outcome = "bj_dealer"; take = 2; }
                 else if (dScore > 21) { outcome = "dealer_bust"; give = 1; }
@@ -694,6 +596,7 @@
                 else { outcome = "tie"; take = 1; give = 1; }
 
                 if (data.doubled?.[p]) { take *= 2; give *= 2; }
+
                 if (data.currentEvent === "happy_hour") { take *= 2; give *= 2; }
                 if (data.currentEvent === "green_carpet" && isPlayerBJNatural) give = 10;
                 
@@ -702,7 +605,10 @@
 
                 if (data.currentEvent === "russian_roulette") {
                     let realP = p.replace("_split", "");
-                    if (realP !== data.eventTarget) { rrTotalGiveToTarget += give; give = 0; }
+                    if (realP !== data.eventTarget) { 
+                        rrTotalGiveToTarget += give; // Les gorgées gagnées vont au target
+                        give = 0; 
+                    }
                 }
 
                 let realP = p.replace("_split", "");
@@ -711,7 +617,8 @@
                 if (culSec) realResults[realP].culSec = true;
 
                 if (["bust", "loss", "bj_dealer"].includes(outcome)) streaks[realP] = (streaks[realP] || 0) + 1;
-                else if (["win", "bj_player", "dealer_bust", "tie", "bj_both"].includes(outcome)) streaks[realP] = 0;
+                else if (["win", "bj_player", "dealer_bust"].includes(outcome)) streaks[realP] = 0;
+                else if (outcome === "tie" || outcome === "bj_both") streaks[realP] = 0; 
 
                 results[p] = { outcome, take, give, culSec }; poolToGive[realP] += give;
             });
@@ -719,26 +626,6 @@
             if (data.currentEvent === "russian_roulette" && data.eventTarget && realResults[data.eventTarget]) {
                 realResults[data.eventTarget].take += rrTotalGiveToTarget;
                 if (results[data.eventTarget]) results[data.eventTarget].take += rrTotalGiveToTarget;
-            }
-
-            // APPLICATION DU PACTE DE SANG : Fusion complète des peines et gains
-            if (data.currentEvent === "pacte_de_sang" && data.linkedPlayers?.length === 2) {
-                let p1 = data.linkedPlayers[0], p2 = data.linkedPlayers[1];
-                let sharedTake = (realResults[p1]?.take || 0) + (realResults[p2]?.take || 0);
-                let sharedGive = (realResults[p1]?.give || 0) + (realResults[p2]?.give || 0);
-                let sharedCulSec = (realResults[p1]?.culSec || false) || (realResults[p2]?.culSec || false);
-
-                if (realResults[p1]) { realResults[p1].take = sharedTake; realResults[p1].give = sharedGive; realResults[p1].culSec = sharedCulSec; }
-                if (realResults[p2]) { realResults[p2].take = sharedTake; realResults[p2].give = sharedGive; realResults[p2].culSec = sharedCulSec; }
-                if (poolToGive[p1] !== undefined) poolToGive[p1] = sharedGive;
-                if (poolToGive[p2] !== undefined) poolToGive[p2] = sharedGive;
-
-                data.players.forEach(p => {
-                    let rp = p.replace("_split", "");
-                    if ((rp === p1 || rp === p2) && results[p]) {
-                        results[p].take = sharedTake; results[p].give = sharedGive; results[p].culSec = sharedCulSec;
-                    }
-                });
             }
 
             Object.keys(realResults).forEach(realP => {
@@ -760,39 +647,24 @@
                 const roomSnap = await getDoc(doc(db, "rooms", currentRoomCode));
                 if (roomSnap.exists()) {
                     await updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayUnion(myPseudo), [`pings.${myPseudo}`]: Date.now() });
+                    window.showScreen('screen-mobile-lobby');
                     
-                    // Lancement du chargement introductif uniquement lors de la connexion
-                    const loadingPhrases = ["Préparation du tapis...", "Mélange des cartes...", "Vérification des verres...", "Le croupier s'installe..."];
-                    let phraseIdx = 0;
-                    document.getElementById('loading-text').innerText = loadingPhrases[phraseIdx];
-                    window.showScreen('screen-loading');
-
-                    const phraseInterval = setInterval(() => {
-                        const el = document.getElementById('loading-text');
-                        if (el) { phraseIdx = (phraseIdx + 1) % loadingPhrases.length; el.innerText = loadingPhrases[phraseIdx]; }
-                    }, 600);
-
-                    setTimeout(() => {
-                        clearInterval(phraseInterval);
-                        document.getElementById('screen-loading').classList.remove('active');
+                    onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
+                        localRoomData = docSnap.data();
                         
-                        onSnapshot(doc(db, "rooms", currentRoomCode), (docSnap) => {
-                            localRoomData = docSnap.data();
-                            
-                            if (localRoomData.status !== lastStatus) {
-                                if (lastStatus === "playing" && ["distributing", "finished"].includes(localRoomData.status)) {
-                                    let myOutcome = localRoomData.results?.[myPseudo]?.outcome || "loss";
-                                    showRevealScreen(myOutcome);
-                                }
-                                lastStatus = localRoomData.status;
+                        // Déclencheur pour l'écran de révélation
+                        if (localRoomData.status !== lastStatus) {
+                            if (lastStatus === "playing" && ["distributing", "finished"].includes(localRoomData.status)) {
+                                let myOutcome = localRoomData.results?.[myPseudo]?.outcome || "loss";
+                                showRevealScreen(myOutcome);
                             }
+                            lastStatus = localRoomData.status;
+                        }
 
-                            if (localRoomData.status === "closed") { window.showScreen('screen-disconnected'); currentRoomCode = ""; }
-                            else if (["playing", "distributing", "finished"].includes(localRoomData.status)) updateGameMobile();
-                            else { window.showScreen('screen-mobile-lobby'); document.getElementById('mobile-drink-modal').style.display = "none"; document.getElementById('mobile-distrib-modal').style.display = "none"; }
-                        });
-                    }, 2500);
-
+                        if (localRoomData.status === "closed") { window.showScreen('screen-disconnected'); currentRoomCode = ""; }
+                        else if (["playing", "distributing", "finished"].includes(localRoomData.status)) updateGameMobile();
+                        else { window.showScreen('screen-mobile-lobby'); document.getElementById('mobile-drink-modal').style.display = "none"; document.getElementById('mobile-distrib-modal').style.display = "none"; }
+                    });
                 } else document.getElementById('error-msg').innerText = "Session introuvable.";
             } catch (error) { document.getElementById('error-msg').innerText = "Erreur réseau."; }
         };
@@ -810,8 +682,14 @@
             } else {
                 title.innerText = "ÉGALITÉ"; title.style.color = "var(--gold)"; icon.innerText = "🤝"; vibrate([200]);
             }
+            
             modal.style.display = "flex";
-            setTimeout(() => { modal.style.display = "none"; isRevealing = false; updateGameMobile(); }, 2500);
+            
+            setTimeout(() => {
+                modal.style.display = "none";
+                isRevealing = false;
+                updateGameMobile(); 
+            }, 2500);
         }
 
         function updateGameMobile() {
@@ -838,8 +716,7 @@
                 if (amountToGive > 0) {
                     vibrate([150, 100, 150]);
                     document.getElementById('distrib-modal-title').innerText = "DISTRIBUTION";
-                    let pacteTxt = data.currentEvent === "pacte_de_sang" ? " (Pacte Partagé !)" : "";
-                    document.getElementById('distrib-modal-text').innerText = `Il vous reste ${amountToGive} gorgée(s) à distribuer${pacteTxt} :`;
+                    document.getElementById('distrib-modal-text').innerText = `Il vous reste ${amountToGive} gorgée(s) à donner :`;
                     
                     let btnContainer = document.getElementById('distrib-buttons-container'); btnContainer.innerHTML = "";
                     [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))].forEach(p => {
@@ -848,7 +725,7 @@
                     distribModal.style.display = "flex";
                 } else {
                     document.getElementById('distrib-modal-title').innerText = "ATTENTE";
-                    document.getElementById('distrib-modal-text').innerText = "Vos adversaires distribuent leurs faveurs...";
+                    document.getElementById('distrib-modal-text').innerText = "Les autres joueurs distribuent leurs gorgées...";
                     document.getElementById('distrib-buttons-container').innerHTML = "";
                     distribModal.style.display = "flex";
                 }
@@ -863,15 +740,14 @@
                 if (totalTake > 0) {
                     vibrate([400]); iconEl.innerText = "🥃";
                     msgText += `<span class="take-color" style="font-size: 26px;">Buvez ${totalTake} gorgée(s) !</span>\n`;
-                    if (data.currentEvent === "pacte_de_sang") msgText += `<span style="color:#ff3366; font-size:14px; font-weight:bold;">(Effet Pacte de Sang incluant votre allié !)</span>\n`;
-                    if (received > 0 && res.take > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(${res.take} de jeu + ${received} ciblées)</small>\n`;
-                    else if (received > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(La table s'est liguée contre vous !)</small>\n`;
+                    if(received > 0 && res.take > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(${res.take} de la table + ${received} reçues)</small>\n`;
+                    else if (received > 0) msgText += `<small style="font-size: 14px; font-weight:normal; opacity:0.7">(Les autres joueurs vous ont ciblé !)</small>\n`;
                 } else { iconEl.innerText = "👑"; msgText = "Vous êtes sauvé !"; }
 
                 if (res.culSec) {
                     vibrate([400, 200, 400, 200, 800]); iconEl.innerText = "💀";
                     msgTitle = "CUL SEC !";
-                    msgText = `Sanction fatale de la manche.\n\n${msgText}`;
+                    msgText = `Sanction de la partie.\n\n${msgText}`;
                 }
 
                 document.getElementById('drink-modal-title').innerText = msgTitle;
@@ -898,7 +774,7 @@
             if (myState === "bust") { title.innerText = "💥 BRÛLÉ !"; title.style.color = "var(--danger)"; controls.style.display = "none"; badge.innerText = "Perdu"; badge.style.borderColor = "var(--danger)";}
             else if (myState === "stand") { title.innerText = "✅ RESTE"; title.style.color = "var(--gold)"; controls.style.display = "none"; badge.innerText = "En attente"; badge.style.borderColor = "var(--gold)";}
             else if (isMyTurn) {
-                vibrate([80]); title.innerText = data.currentEvent === "infiltre" ? "C'est votre tour (Bluffez !)" : "C'est à vous !"; title.style.color = "var(--gold)"; controls.style.display = "grid"; badge.innerText = "Votre Tour"; badge.style.background = "var(--gold)"; badge.style.color = "#000";
+                vibrate([80]); title.innerText = "C'est à vous !"; title.style.color = "var(--gold)"; controls.style.display = "grid"; badge.innerText = "Votre Tour"; badge.style.background = "var(--gold)"; badge.style.color = "#000";
                 
                 const btnStand = document.getElementById('btn-stand');
                 if (data.currentEvent === "green_carpet" && currentScore < 16) {
