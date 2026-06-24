@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Version 3.3 (Correctifs Stabilité)</title>
+    <title>Blackjack Alcool - Version 4 (Gorgées & Cul Sec)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -40,7 +40,7 @@
         #tv-board { display: flex; flex-direction: column; gap: 20px; margin-top: 40px; }
         .dealer-area { background-color: rgba(0,0,0,0.5); padding: 20px; border-radius: 10px; }
         .players-area { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; }
-        .player-mat { background-color: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 200px; border: 3px solid transparent; }
+        .player-mat { background-color: rgba(255,255,255,0.1); padding: 15px; border-radius: 10px; min-width: 200px; border: 3px solid transparent; position: relative; }
         .player-mat.active-turn { border-color: #ffb703; box-shadow: 0 0 15px #ffb703; }
         .player-mat.bust { opacity: 0.5; }
         
@@ -52,6 +52,19 @@
         
         #error-msg { color: #ff4d4d; font-weight: bold; margin-top: 10px; }
         #tv-result-msg { font-size: 28px; color: #ffb703; font-weight: bold; margin-top: 20px; }
+
+        /* Pop-up Gorgées Mobile */
+        #mobile-drink-modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(0,0,0,0.9); z-index: 100; flex-direction: column; 
+            justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;
+            animation: fadeIn 0.5s ease-out;
+        }
+        #drink-modal-title { font-size: 40px; margin-bottom: 10px; text-transform: uppercase; }
+        #drink-modal-text { font-size: 28px; font-weight: bold; color: #ffb703; text-align: center; }
+        .is-culsec { color: #f44336 !important; font-size: 35px !important; text-shadow: 0 0 10px red; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
     </style>
 </head>
 <body>
@@ -81,7 +94,7 @@
 
     <div id="screen-disconnected" class="screen lobby-box" style="border: 3px solid #f44336;">
         <h2>🚨 Table Fermée !</h2>
-        <p>Le croupier est parti vomir (ou a pris une pause). Fin de la partie !</p>
+        <p>Le croupier est parti prendre une pause. Fin de la partie !</p>
         <button class="btn btn-main" onclick="window.location.reload()">Retour à l'accueil</button>
     </div>
 
@@ -116,6 +129,11 @@
             <button class="btn btn-hit" onclick="window.hit()">HIT (Tirer)</button>
             <button class="btn btn-stand" onclick="window.stand()">STAND (Rester)</button>
         </div>
+    </div>
+
+    <div id="mobile-drink-modal">
+        <h2 id="drink-modal-title">RÉSULTAT</h2>
+        <p id="drink-modal-text">Calcul en cours...</p>
     </div>
 
     <script type="module">
@@ -165,7 +183,7 @@
         };
 
         // ==========================================
-        // DÉCONNEXIONS ET INACTIVITÉ
+        // DÉCONNEXIONS & PINGS OPTIMISÉS
         // ==========================================
 
         window.addEventListener('beforeunload', () => {
@@ -176,7 +194,6 @@
                     if (localRoomData.status === "waiting") {
                         updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayRemove(myPseudo) }).catch(()=>{});
                     } else if (localRoomData.status === "playing") {
-                        // En jeu : on le marque comme ayant abandonné
                         let updates = { [`playerStates.${myPseudo}`]: "left" };
                         if (localRoomData.players[localRoomData.currentTurnIndex] === myPseudo) {
                             updates.currentTurnIndex = localRoomData.currentTurnIndex + 1;
@@ -187,54 +204,45 @@
             }
         });
 
-        // ==========================================
-        // INTERVALLES DE SÉCURITÉ (PINGS)
-        // ==========================================
-
-        // Mobile : Envoie son ping et vérifie le ping de la TV (Toutes les 4s)
+        // Ping Mobile allégé (toutes les 5s)
         setInterval(() => {
             if (!isTV && myPseudo && currentRoomCode && localRoomData) {
-                // Si la TV n'a pas répondu depuis plus de 12 secondes, elle a crashé ou quitté
-                if (localRoomData.status === "closed" || (localRoomData.tvPing && Date.now() - localRoomData.tvPing > 12000)) {
+                if (localRoomData.status === "closed" || (localRoomData.tvPing && Date.now() - localRoomData.tvPing > 15000)) {
                     window.showScreen('screen-disconnected');
-                    currentRoomCode = ""; // Stoppe l'intervalle
+                    currentRoomCode = "";
                     return;
                 }
-
                 if (localRoomData.status !== "closed") {
-                    updateDoc(doc(db, "rooms", currentRoomCode), {
-                        [`pings.${myPseudo}`]: Date.now()
-                    }).catch(()=>{});
+                    updateDoc(doc(db, "rooms", currentRoomCode), { [`pings.${myPseudo}`]: Date.now() }).catch(()=>{});
                 }
             }
-        }, 4000);
+        }, 5000);
 
-        // TV : Envoie son ping et vérifie l'inactivité des joueurs (Toutes les 3s)
+        // Ping TV allégé (toutes les 5s, déconnexion après 20s pour éviter les bugs réseau)
         setInterval(async () => {
             if (isTV && currentRoomCode && localRoomData && localRoomData.status !== "closed") {
                 const now = Date.now();
-                let updates = { tvPing: now }; // La TV confirme qu'elle est en vie
+                let updates = { tvPing: now }; 
+                let modified = true; // On force l'update du ping TV
 
                 localRoomData.players.forEach(p => {
                     const lastPing = localRoomData.pings?.[p] || now;
                     const state = localRoomData.playerStates?.[p];
                     
-                    // Si joueur inactif 15 secondes
-                    if (now - lastPing > 15000) {
+                    if (now - lastPing > 20000) {
                         if (localRoomData.status === "waiting") {
                             updates.players = arrayRemove(p); 
                         } else if (localRoomData.status === "playing" && state !== "left" && state !== "bust" && state !== "stand") {
-                            updates[`playerStates.${p}`] = "left"; // Marqué comme abandon
+                            updates[`playerStates.${p}`] = "left";
                             if (localRoomData.players[localRoomData.currentTurnIndex] === p) {
                                 updates.currentTurnIndex = localRoomData.currentTurnIndex + 1; 
                             }
                         }
                     }
                 });
-
                 try { await updateDoc(doc(db, "rooms", currentRoomCode), updates); } catch(e){}
             }
-        }, 3000);
+        }, 5000);
 
 
         // ==========================================
@@ -246,8 +254,8 @@
             const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
             for (let i = 0; i < 4; i++) currentRoomCode += chars.charAt(Math.floor(Math.random() * chars.length));
             
-            // On initialise le ping de la TV dès le début
-            await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [], pings: {}, tvPing: Date.now() });
+            // Ajout du compteur de Défaites (streaks)
+            await setDoc(doc(db, "rooms", currentRoomCode), { status: "waiting", players: [], pings: {}, tvPing: Date.now(), streaks: {} });
             document.getElementById('display-room-code').innerText = currentRoomCode;
             document.getElementById('tv-game-room-code').innerText = currentRoomCode;
             window.showScreen('screen-tv-lobby');
@@ -271,12 +279,10 @@
 
         window.startGame = async () => {
             const now = Date.now();
-            
-            // NETTOYAGE : On garde uniquement les joueurs actifs (on supprime ceux marqués "left" ou crashés)
             let activePlayers = localRoomData.players.filter(p => {
                 const isLeft = localRoomData.playerStates?.[p] === "left";
                 const lastPing = localRoomData.pings?.[p] || now;
-                return !isLeft && (now - lastPing < 20000); 
+                return !isLeft && (now - lastPing < 25000); 
             });
 
             const suits = ['♠', '♥', '♣', '♦'];
@@ -288,17 +294,17 @@
             let playerHands = {};
             let playerStates = {};
             
-            // On ne distribue qu'aux joueurs nettoyés
             activePlayers.forEach(p => {
                 playerHands[p] = [deck.pop(), deck.pop()];
                 playerStates[p] = "playing"; 
             });
             let dealerHand = [deck.pop(), deck.pop()];
 
-            // On écrase la liste des joueurs avec la liste propre
+            // Reset des résultats de la manche précédente, mais on conserve les Streaks
             await updateDoc(doc(db, "rooms", currentRoomCode), {
                 players: activePlayers, 
-                status: "playing", deck, playerHands, playerStates, dealerHand, currentTurnIndex: 0, dealerPlayed: false
+                status: "playing", deck, playerHands, playerStates, dealerHand, currentTurnIndex: 0, dealerPlayed: false,
+                results: {} 
             });
         };
 
@@ -317,13 +323,24 @@
             
             data.players.forEach((p, index) => {
                 const hand = data.playerHands?.[p];
-                if (!hand) return; // On masque les joueurs qui rejoignent en cours
+                if (!hand) return; 
 
                 const state = data.playerStates[p];
                 const isCurrentTurn = (index === data.currentTurnIndex && !isFinished);
                 
                 let cardsHtml = hand.map(c => createHtmlCard(c)).join('');
+                
+                // Affichage TV simplifié pendant le jeu
                 let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : state === 'left' ? "❌ ABANDON" : "";
+                
+                // Si la partie est finie, on affiche le nombre de gorgées sur la TV aussi
+                if (isFinished && data.results && data.results[p]) {
+                    const res = data.results[p];
+                    if (res.culSec) stateText = "🚨 CUL SEC !";
+                    else if (res.sips > 0) stateText = `🍺 ${res.sips} Gorgées`;
+                    else stateText = "🎉 SAUVÉ";
+                }
+
                 let matClass = `player-mat ${isCurrentTurn ? 'active-turn' : ''} ${(state === 'bust' || state === 'left') ? 'bust' : ''}`;
                 
                 playersArea.innerHTML += `
@@ -334,35 +351,77 @@
                     </div>`;
             });
 
-            // GESTION DU PASSAGE DE TOUR AUTO (Joueurs qui rejoignent en cours ou qui ont quitté)
             if (data.currentTurnIndex < data.players.length) {
                 let currentPlayer = data.players[data.currentTurnIndex];
-                
-                // Si le joueur n'a pas de main (rejoint mid-game) ou s'il a abandonné, on skip direct !
                 if (!data.playerHands?.[currentPlayer] || data.playerStates[currentPlayer] === "left") {
                     updateDoc(doc(db, "rooms", currentRoomCode), { currentTurnIndex: data.currentTurnIndex + 1 });
-                    return; // On attend la prochaine mise à jour Firebase
+                    return; 
                 }
-            } 
-            // Croupier joue
-            else if (data.status === "playing" && !data.dealerPlayed) {
+            } else if (data.status === "playing" && !data.dealerPlayed) {
                 playDealerTurn();
             }
 
             document.getElementById('new-round-btn').style.display = isFinished ? "inline-block" : "none";
-            if(isFinished) document.getElementById('tv-result-msg').innerText = "Manche terminée ! Préparez-vous à boire...";
+            if(isFinished) document.getElementById('tv-result-msg').innerText = "Manche terminée ! Aux joueurs de boire 🍻";
             else document.getElementById('tv-result-msg').innerText = "";
         }
 
+        // ==========================================
+        // V4 : CALCUL DES GORGÉES ET DU CUL SEC
+        // ==========================================
         async function playDealerTurn() {
             let data = localRoomData;
             let dHand = [...data.dealerHand];
             let deck = [...data.deck];
 
+            // Le croupier tire jusqu'à 17
             while(calculateScore(dHand) < 17) { dHand.push(deck.pop()); }
+            
+            let dScore = calculateScore(dHand);
+            let results = {};
+            let streaks = data.streaks || {};
+
+            // Calcul pour chaque joueur actif
+            data.players.forEach(p => {
+                if (data.playerStates[p] === "left" || !data.playerHands[p]) return;
+                
+                let pScore = calculateScore(data.playerHands[p]);
+                let pState = data.playerStates[p];
+                let outcome = "";
+                let sips = 0;
+                
+                // Règles des gorgées
+                if (pState === "bust") {
+                    outcome = "bust"; sips = 5;
+                } else if (dScore > 21) {
+                    outcome = "win"; sips = 0;
+                } else if (pScore > dScore) {
+                    outcome = "win"; sips = 0;
+                } else if (pScore < dScore) {
+                    outcome = "loss"; sips = 3;
+                } else {
+                    outcome = "tie"; sips = 2; // Égalité
+                }
+
+                // Compteur de CUL SEC
+                if (outcome === "win" || outcome === "tie") {
+                    streaks[p] = 0; // Remise à zéro
+                } else {
+                    streaks[p] = (streaks[p] || 0) + 1; // +1 Défaite
+                }
+
+                let culSec = false;
+                if (streaks[p] >= 3) {
+                    culSec = true;
+                    streaks[p] = 0; // Remise à zéro après le cul sec
+                }
+
+                results[p] = { outcome, sips, culSec };
+            });
 
             await updateDoc(doc(db, "rooms", currentRoomCode), {
-                dealerHand: dHand, deck: deck, dealerPlayed: true, status: "finished"
+                dealerHand: dHand, deck: deck, dealerPlayed: true, status: "finished",
+                results: results, streaks: streaks
             });
         }
 
@@ -389,21 +448,54 @@
                             currentRoomCode = "";
                             return;
                         }
-
                         if (localRoomData.status === "playing" || localRoomData.status === "finished") updateGameMobile();
-                        else window.showScreen('screen-mobile-lobby');
+                        else {
+                            window.showScreen('screen-mobile-lobby');
+                            document.getElementById('mobile-drink-modal').style.display = "none"; // Cache la popup si retour au lobby
+                        }
                     });
                 } else { document.getElementById('error-msg').innerText = "Code introuvable."; }
             } catch (error) { document.getElementById('error-msg').innerText = "Erreur de connexion."; }
         };
 
         function updateGameMobile() {
-            if (!currentRoomCode) return; // Sécurité si déconnecté
+            if (!currentRoomCode) return; 
             window.showScreen('screen-mobile-game');
             const data = localRoomData;
             
             const title = document.getElementById('mobile-status-title');
             const controls = document.getElementById('mobile-controls');
+            const drinkModal = document.getElementById('mobile-drink-modal');
+
+            // --- V4 : GESTION DE LA POP-UP DE GORGÉES ---
+            if (data.status === "finished" && data.results && data.results[myPseudo]) {
+                const res = data.results[myPseudo];
+                let msgTitle = "";
+                let msgSips = `Bois ${res.sips} gorgée(s) ! 🍻`;
+                
+                if (res.outcome === "win") { msgTitle = "🎉 GAGNÉ !"; msgSips = "Tu es sauvé(e) ! 😎"; }
+                else if (res.outcome === "tie") msgTitle = "🤝 ÉGALITÉ";
+                else if (res.outcome === "bust") msgTitle = "💥 BUST !";
+                else msgTitle = "💀 PERDU !";
+
+                const textEl = document.getElementById('drink-modal-text');
+                if (res.culSec) {
+                    msgTitle = "🚨 PUNITION 🚨";
+                    msgSips = "CUL SEC !!\n(3 Défaites d'affilée)";
+                    textEl.classList.add("is-culsec");
+                } else {
+                    textEl.classList.remove("is-culsec");
+                }
+
+                document.getElementById('drink-modal-title').innerText = msgTitle;
+                textEl.innerText = msgSips;
+                drinkModal.style.display = "flex";
+                controls.style.display = "none";
+                return; // On arrête là pour la vue mobile (le popup couvre tout)
+            } else {
+                drinkModal.style.display = "none"; // Cache la popup si la manche est en cours
+            }
+            // ---------------------------------------------
 
             const myHand = data.playerHands?.[myPseudo];
             if (!myHand) {
@@ -422,11 +514,7 @@
             document.getElementById('mobile-my-cards').innerHTML = myHand.map(c => createHtmlCard(c)).join('');
             document.getElementById('mobile-my-score').innerText = `Mon Score : ${calculateScore(myHand)}`;
 
-            if (data.status === "finished") {
-                title.innerText = "Fin de la manche ! Regarde la TV";
-                title.style.color = "#ffb703";
-                controls.style.display = "none";
-            } else if (myState === "bust") {
+            if (myState === "bust") {
                 title.innerText = "💥 BUST ! (Tu as dépassé 21)";
                 title.style.color = "#f44336";
                 controls.style.display = "none";
