@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack Alcool - Version 6 (Distribution Anonyme)</title>
+    <title>Blackjack Alcool - Version 7 (Split & Double)</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -20,14 +20,20 @@
         .screen.active { display: block; }
         .lobby-box { max-width: 600px; background-color: rgba(0, 0, 0, 0.3); padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.5); margin: 0 auto; }
         
-        /* Boutons et inputs */
+        /* Boutons */
         .btn { padding: 12px 24px; font-size: 18px; font-weight: bold; cursor: pointer; border: none; border-radius: 8px; margin: 10px; transition: 0.2s; }
         .btn-main { background-color: #ffb703; color: black; }
         .btn-main:hover { background-color: #fb8500; }
         .btn-sub { background-color: #2196F3; color: white; }
         .btn-sub:hover { background-color: #0b7dda; }
-        .btn-hit { background-color: #f44336; color: white; width: 100%; max-width: 200px; font-size: 24px; padding: 20px;}
-        .btn-stand { background-color: #4CAF50; color: white; width: 100%; max-width: 200px; font-size: 24px; padding: 20px;}
+        
+        /* Boutons de jeu */
+        .game-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 20px; width: 100%; max-width: 400px; }
+        .btn-game { width: 45%; padding: 15px; font-size: 20px; font-weight: bold; border-radius: 8px; border: none; color: white; cursor: pointer; }
+        .btn-hit { background-color: #f44336; }
+        .btn-stand { background-color: #4CAF50; }
+        .btn-double { background-color: #2196F3; }
+        .btn-split { background-color: #9C27B0; }
         
         input { padding: 12px; font-size: 18px; border-radius: 8px; border: 2px solid #ccc; margin: 10px 0; width: 80%; max-width: 300px; text-align: center; text-transform: uppercase; }
         
@@ -53,12 +59,12 @@
         #error-msg { color: #ff4d4d; font-weight: bold; margin-top: 10px; }
         #tv-result-msg { font-size: 28px; color: #ffb703; font-weight: bold; margin-top: 20px; }
 
-        /* V6 Mobile Distribution Styles */
+        /* Distribution Anonyme */
         .distrib-btn-group { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; width: 100%; max-width: 250px; }
         .btn-give { background-color: #4CAF50; color: white; padding: 10px; font-size: 16px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; }
         .btn-give:hover { background-color: #3e8e41; }
 
-        /* Pop-up Gorgées Mobile */
+        /* Pop-up Mobile */
         #mobile-drink-modal {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0,0,0,0.95); z-index: 100; flex-direction: column; 
@@ -132,22 +138,22 @@
         <div id="mobile-my-cards" class="cards-container"></div>
         <h3 id="mobile-my-score"></h3>
         
-        <div id="mobile-controls" style="display: none; flex-direction: column; align-items: center; gap: 15px; margin-top: 20px;">
-            <button class="btn btn-hit" onclick="window.hit()">HIT (Tirer)</button>
-            <button class="btn btn-stand" onclick="window.stand()">STAND (Rester)</button>
+        <div id="mobile-controls" class="game-controls" style="display: none;">
+            <button class="btn-game btn-hit" onclick="window.hit()">HIT</button>
+            <button class="btn-game btn-stand" onclick="window.stand()">STAND</button>
+            <button class="btn-game btn-double" id="btn-double" onclick="window.double()">DOUBLE</button>
+            <button class="btn-game btn-split" id="btn-split" onclick="window.split()">SPLIT</button>
         </div>
 
-        <!-- Zone V6 de distribution anonyme -->
         <div id="mobile-distribution-zone" style="display:none; flex-direction:column; align-items:center; margin-top:20px;">
-            <h3 style="color:#ffb703;" id="distrib-count-text">Il te reste X gorgées à distribuer :</h3>
+            <h3 style="color:#ffb703;" id="distrib-count-text"></h3>
             <div class="distrib-btn-group" id="distrib-buttons-container"></div>
         </div>
     </div>
 
-    <!-- POP-UP RÉSULTAT MOBILE (V6) -->
     <div id="mobile-drink-modal">
         <h2 id="drink-modal-title">RÉSULTAT</h2>
-        <p id="drink-modal-text">Calcul en cours...</p>
+        <p id="drink-modal-text"></p>
         <button class="btn btn-main" onclick="document.getElementById('mobile-drink-modal').style.display='none'" style="margin-top:20px;">Fermer</button>
     </div>
 
@@ -210,7 +216,7 @@
                         updateDoc(doc(db, "rooms", currentRoomCode), { players: arrayRemove(myPseudo) }).catch(()=>{});
                     } else if (localRoomData.status === "playing" || localRoomData.status === "distributing") {
                         let updates = { [`playerStates.${myPseudo}`]: "left" };
-                        if (localRoomData.players[localRoomData.currentTurnIndex] === myPseudo) {
+                        if (localRoomData.players[localRoomData.currentTurnIndex] && localRoomData.players[localRoomData.currentTurnIndex].startsWith(myPseudo)) {
                             updates.currentTurnIndex = localRoomData.currentTurnIndex + 1;
                         }
                         updateDoc(doc(db, "rooms", currentRoomCode), updates).catch(()=>{});
@@ -227,7 +233,11 @@
                     return;
                 }
                 if (localRoomData.status !== "closed") {
-                    updateDoc(doc(db, "rooms", currentRoomCode), { [`pings.${myPseudo}`]: Date.now() }).catch(()=>{});
+                    let pingsToUpdate = { [`pings.${myPseudo}`]: Date.now() };
+                    if (localRoomData.players.includes(myPseudo + "_split")) {
+                        pingsToUpdate[`pings.${myPseudo}_split`] = Date.now();
+                    }
+                    updateDoc(doc(db, "rooms", currentRoomCode), pingsToUpdate).catch(()=>{});
                 }
             }
         }, 5000);
@@ -238,6 +248,7 @@
                 let updates = { tvPing: now }; 
 
                 localRoomData.players.forEach(p => {
+                    if (p.includes("_split")) return; // Le ping est géré par la main principale
                     const lastPing = localRoomData.pings?.[p] || now;
                     const state = localRoomData.playerStates?.[p];
                     
@@ -246,7 +257,8 @@
                             updates.players = arrayRemove(p); 
                         } else if (localRoomData.status === "playing" && state !== "left" && state !== "bust" && state !== "stand") {
                             updates[`playerStates.${p}`] = "left";
-                            if (localRoomData.players[localRoomData.currentTurnIndex] === p) {
+                            if (localRoomData.players.includes(p + "_split")) updates[`playerStates.${p}_split`] = "left";
+                            if (localRoomData.players[localRoomData.currentTurnIndex] && localRoomData.players[localRoomData.currentTurnIndex].startsWith(p)) {
                                 updates.currentTurnIndex = localRoomData.currentTurnIndex + 1; 
                             }
                         }
@@ -289,7 +301,9 @@
 
         window.startGame = async () => {
             const now = Date.now();
+            // Nettoyage des joueurs inactifs ET des mains splitées de la manche précédente
             let activePlayers = localRoomData.players.filter(p => {
+                if (p.includes("_split")) return false; 
                 const isLeft = localRoomData.playerStates?.[p] === "left";
                 const lastPing = localRoomData.pings?.[p] || now;
                 return !isLeft && (now - lastPing < 25000); 
@@ -313,7 +327,7 @@
             await updateDoc(doc(db, "rooms", currentRoomCode), {
                 players: activePlayers, 
                 status: "playing", deck, playerHands, playerStates, dealerHand, currentTurnIndex: 0, dealerPlayed: false,
-                results: {}, randomVictim: null, poolToGive: {}, receivedSips: {}
+                results: {}, realResults: {}, randomVictim: null, poolToGive: {}, receivedSips: {}, doubled: {}
             });
         };
 
@@ -340,17 +354,22 @@
                 
                 let cardsHtml = hand.map(c => createHtmlCard(c)).join('');
                 let stateText = state === 'bust' ? "💥 BUST" : state === 'stand' ? "✅ STAND" : state === 'left' ? "❌ ABANDON" : "";
+                if (data.doubled?.[p]) stateText += " (x2)";
                 
+                let displayName = p.replace("_split", " (Main 2)");
+
                 if (isDistributing) {
                     stateText = "🤫 Choix des cibles...";
                 } else if (isFinished && data.results && data.results[p]) {
                     const res = data.results[p];
-                    const totalSipsToDrink = res.take + (data.receivedSips?.[p] || 0);
-
+                    const realP = p.replace("_split", "");
+                    
                     if (res.culSec) {
                         stateText = "🚨 CUL SEC !";
-                    } else if (totalSipsToDrink > 0) {
-                        stateText = `🍺 DOIT BOIRE : ${totalSipsToDrink} Gorgée(s)`;
+                    } else if (res.take > 0 || res.give > 0) {
+                        stateText = "";
+                        if (res.take > 0) stateText += `🍺 +${res.take} `;
+                        if (res.give > 0) stateText += `🎁 Distribue ${res.give}`;
                     } else {
                         stateText = "🎉 SAUVÉ";
                     }
@@ -360,7 +379,7 @@
                 
                 playersArea.innerHTML += `
                     <div class="${matClass}">
-                        <h3>${p} (Score: ${calculateScore(hand)})</h3>
+                        <h3>${displayName} (Score: ${calculateScore(hand)})</h3>
                         <p style="color:#ffb703; font-weight:bold">${stateText}</p>
                         <div class="cards-container">${cardsHtml}</div>
                     </div>`;
@@ -413,18 +432,24 @@
             
             let dScore = calculateScore(dHand);
             let isDealerBJ = (dHand.length === 2 && dScore === 21);
+            
             let results = {};
+            let realResults = {};
             let streaks = data.streaks || {};
             let poolToGive = {};
             let receivedSips = {};
             let randomVictim = null;
 
-            data.players.forEach(p => { receivedSips[p] = 0; poolToGive[p] = 0; });
+            data.players.forEach(p => { 
+                let realP = p.replace("_split", "");
+                receivedSips[realP] = 0; 
+                poolToGive[realP] = 0; 
+            });
 
             if (isDealerBJ) {
-                let activeP = data.players.filter(p => data.playerStates[p] !== "left" && data.playerHands[p]);
-                if (activeP.length > 0) {
-                    randomVictim = activeP[Math.floor(Math.random() * activeP.length)];
+                let activeReals = [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))];
+                if (activeReals.length > 0) {
+                    randomVictim = activeReals[Math.floor(Math.random() * activeReals.length)];
                     receivedSips[randomVictim] += 6; 
                 }
             }
@@ -449,27 +474,36 @@
                 else if (pScore < dScore) { outcome = "loss"; take = 2; }
                 else { outcome = "tie"; take = 1; give = 1; }
 
-                if (["bust", "loss", "bj_dealer"].includes(outcome)) {
-                    streaks[p] = (streaks[p] || 0) + 1;
-                } else if (["win", "bj_player", "dealer_bust"].includes(outcome)) {
-                    streaks[p] = 0;
-                } else if (outcome === "tie" || outcome === "bj_both") {
-                    streaks[p] = 0; 
+                if (data.doubled?.[p]) {
+                    take *= 2; give *= 2;
                 }
 
-                let culSec = false;
-                if (streaks[p] >= 5) {
-                    culSec = true;
-                    streaks[p] = 0;
-                }
+                let realP = p.replace("_split", "");
+                if (!realResults[realP]) realResults[realP] = { take: 0, give: 0 };
+                realResults[realP].take += take;
+                realResults[realP].give += give;
 
-                results[p] = { outcome, take, give, culSec };
-                poolToGive[p] = give;
+                if (["bust", "loss", "bj_dealer"].includes(outcome)) streaks[realP] = (streaks[realP] || 0) + 1;
+                else if (["win", "bj_player", "dealer_bust"].includes(outcome)) streaks[realP] = 0;
+                else if (outcome === "tie" || outcome === "bj_both") streaks[realP] = 0; 
+
+                results[p] = { outcome, take, give, culSec: false };
+                poolToGive[realP] += give;
+            });
+
+            // Vérification Cul Sec sur les joueurs réels
+            Object.keys(realResults).forEach(realP => {
+                if (streaks[realP] >= 5) {
+                    realResults[realP].culSec = true;
+                    streaks[realP] = 0;
+                    // On taggue la main principale pour l'affichage TV
+                    if (results[realP]) results[realP].culSec = true;
+                }
             });
 
             await updateDoc(doc(db, "rooms", currentRoomCode), {
                 dealerHand: dHand, deck: deck, dealerPlayed: true, status: "distributing",
-                results: results, streaks: streaks, randomVictim: randomVictim,
+                results: results, realResults: realResults, streaks: streaks, randomVictim: randomVictim,
                 poolToGive: poolToGive, receivedSips: receivedSips
             });
         }
@@ -518,6 +552,12 @@
             const textEl = document.getElementById('drink-modal-text');
             const distribZone = document.getElementById('mobile-distribution-zone');
 
+            // Cache le pop-up si une nouvelle manche démarre
+            if (data.status === "playing") {
+                drinkModal.style.display = "none";
+            }
+
+            // --- PHASE DISTRIBUTING (ANONYME) ---
             if (data.status === "distributing") {
                 controls.style.display = "none";
                 drinkModal.style.display = "none";
@@ -528,17 +568,18 @@
                     title.innerText = "🎁 DISTRIBUE TES GORGÉES !";
                     title.style.color = "#4CAF50";
                     distribZone.style.display = "flex";
-                    document.getElementById('distrib-count-text').innerText = `Il te reste ${amountToGive} gorgée(s) à distribuer anonymement :`;
+                    document.getElementById('distrib-count-text').innerText = `Il te reste ${amountToGive} gorgée(s) à distribuer :`;
                     
                     const btnContainer = document.getElementById('distrib-buttons-container');
                     btnContainer.innerHTML = "";
-                    data.players.forEach(p => {
-                        if (p !== myPseudo && data.playerStates[p] !== "left") {
+                    let uniquePlayers = [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))];
+                    uniquePlayers.forEach(p => {
+                        if (p !== myPseudo) {
                             btnContainer.innerHTML += `<button class="btn-give" onclick="window.giveSipTo('${p}')">👉 Donner à ${p}</button>`;
                         }
                     });
                 } else {
-                    title.innerText = "⏳ Les autres distribuent leurs gorgées... Attend la fin !";
+                    title.innerText = "⏳ Gorgées en cours de distribution par les autres joueurs...";
                     title.style.color = "white";
                     distribZone.style.display = "none";
                 }
@@ -547,27 +588,20 @@
                 distribZone.style.display = "none";
             }
 
-            if (data.status === "finished" && data.results && data.results[myPseudo]) {
-                const res = data.results[myPseudo];
+            // --- PHASE FINISHED (RÉVÉLATION) ---
+            if (data.status === "finished" && data.realResults && data.realResults[myPseudo]) {
+                const res = data.realResults[myPseudo];
                 const received = data.receivedSips?.[myPseudo] || 0;
-                let msgTitle = "RÉSULTAT";
+                let msgTitle = "RÉSULTAT TOTAL";
                 let msgText = "";
                 
-                if (res.outcome === "bust") msgTitle = "💥 BUST !";
-                else if (res.outcome === "loss" || res.outcome === "bj_dealer") msgTitle = "💀 PERDU !";
-                else if (res.outcome === "win") msgTitle = "🎉 GAGNÉ !";
-                else if (res.outcome === "dealer_bust") msgTitle = "🔥 CROUPIER BUST !";
-                else if (res.outcome === "bj_player") msgTitle = "🎰 BLACKJACK !";
-                else if (res.outcome === "bj_both") msgTitle = "⚔️ DOUBLE BLACKJACK";
-                else if (res.outcome === "tie") msgTitle = "🤝 ÉGALITÉ";
-
                 const totalTake = res.take + received;
                 if (totalTake > 0) {
-                    msgText += `<span class="take-color" style="font-size: 32px;">🍺 Bois ${totalTake} gorgée(s) au total !</span>\n`;
+                    msgText += `<span class="take-color" style="font-size: 32px;">🍺 Bois ${totalTake} gorgée(s) !</span>\n`;
                     if(received > 0 && res.take > 0) {
-                        msgText += `<small style="opacity:0.7">(${res.take} de ta défaite + ${received} reçue(s) en traître)</small>\n`;
+                        msgText += `<small style="opacity:0.7">(${res.take} due(s) au croupier + ${received} reçue(s) des joueurs)</small>\n`;
                     } else if (received > 0) {
-                        msgText += `<small style="opacity:0.7">(Tu avais gagné mais quelqu'un t'a ciblé ! 🏴‍☠️)</small>\n`;
+                        msgText += `<small style="opacity:0.7">(Quelqu'un t'a ciblé ! 🏴‍☠️)</small>\n`;
                     }
                 } else {
                     msgText = "Tu t'en sors indemne... Pour cette fois ! 😎";
@@ -587,7 +621,14 @@
                 return;
             }
 
-            const myHand = data.playerHands?.[myPseudo];
+            // --- PHASE PLAYING ---
+            let displayPlayer = myPseudo;
+            if (data.status === "playing") {
+                let current = data.players[data.currentTurnIndex];
+                if (current === myPseudo + "_split") displayPlayer = current;
+            }
+
+            const myHand = data.playerHands?.[displayPlayer];
             if (!myHand) {
                 title.innerText = "⏳ Manche en cours... Tu joueras à la prochaine !";
                 title.style.color = "white";
@@ -598,11 +639,11 @@
             }
 
             const currentPlayer = data.players[data.currentTurnIndex];
-            const isMyTurn = (currentPlayer === myPseudo && data.status === "playing");
-            const myState = data.playerStates[myPseudo];
+            const isMyTurn = (currentPlayer === displayPlayer && data.status === "playing");
+            const myState = data.playerStates[displayPlayer];
 
             document.getElementById('mobile-my-cards').innerHTML = myHand.map(c => createHtmlCard(c)).join('');
-            document.getElementById('mobile-my-score').innerText = `Mon Score : ${calculateScore(myHand)}`;
+            document.getElementById('mobile-my-score').innerText = `Mon Score : ${calculateScore(myHand)} ${displayPlayer.includes("_split") ? "(Main 2)" : ""}`;
 
             if (myState === "bust") {
                 title.innerText = "💥 BUST ! (Tu as dépassé 21)";
@@ -613,11 +654,25 @@
                 title.style.color = "#4CAF50";
                 controls.style.display = "none";
             } else if (isMyTurn) {
-                title.innerText = "🔥 C'EST À TOI !";
+                title.innerText = displayPlayer.includes("_split") ? "🔥 À TA MAIN 2 !" : "🔥 C'EST À TOI !";
                 title.style.color = "#ffb703";
                 controls.style.display = "flex";
+                
+                // Gestion Split / Double
+                let btnDouble = document.getElementById('btn-double');
+                let btnSplit = document.getElementById('btn-split');
+                if (myHand.length === 2) {
+                    btnDouble.style.display = "inline-block";
+                    if (myHand[0].value === myHand[1].value && !displayPlayer.includes("_split")) {
+                        btnSplit.style.display = "inline-block";
+                    } else { btnSplit.style.display = "none"; }
+                } else {
+                    btnDouble.style.display = "none";
+                    btnSplit.style.display = "none";
+                }
             } else {
-                title.innerText = `⏳ En attente de ${currentPlayer || "Croupier"}...`;
+                let waitName = currentPlayer ? currentPlayer.replace("_split", " (Main 2)") : "Croupier";
+                title.innerText = `⏳ En attente de ${waitName}...`;
                 title.style.color = "white";
                 controls.style.display = "none";
             }
@@ -632,33 +687,87 @@
                 [`poolToGive.${myPseudo}`]: currentLeft - 1,
                 [`receivedSips.${targetPlayer}`]: (data.receivedSips?.[targetPlayer] || 0) + 1
             };
-
             await updateDoc(doc(db, "rooms", currentRoomCode), updates);
         };
 
         window.hit = async () => {
             let data = localRoomData;
+            let target = data.players[data.currentTurnIndex];
+            if (!target.startsWith(myPseudo)) return;
+            
             let deck = [...data.deck];
-            let myHand = [...data.playerHands[myPseudo]];
+            let hand = [...data.playerHands[target]];
             
-            myHand.push(deck.pop());
-            let score = calculateScore(myHand);
-            
-            let updates = { deck: deck, [`playerHands.${myPseudo}`]: myHand };
+            hand.push(deck.pop());
+            let score = calculateScore(hand);
+            let updates = { deck: deck, [`playerHands.${target}`]: hand };
             
             if (score > 21) {
-                updates[`playerStates.${myPseudo}`] = "bust";
+                updates[`playerStates.${target}`] = "bust";
                 updates.currentTurnIndex = data.currentTurnIndex + 1; 
             }
-            
             await updateDoc(doc(db, "rooms", currentRoomCode), updates);
         };
 
         window.stand = async () => {
+            let data = localRoomData;
+            let target = data.players[data.currentTurnIndex];
+            if (!target.startsWith(myPseudo)) return;
+
             await updateDoc(doc(db, "rooms", currentRoomCode), {
-                [`playerStates.${myPseudo}`]: "stand",
-                currentTurnIndex: localRoomData.currentTurnIndex + 1 
+                [`playerStates.${target}`]: "stand",
+                currentTurnIndex: data.currentTurnIndex + 1 
             });
+        };
+
+        window.double = async () => {
+            let data = localRoomData;
+            let target = data.players[data.currentTurnIndex];
+            if (!target.startsWith(myPseudo)) return;
+
+            let hand = [...data.playerHands[target]];
+            if (hand.length !== 2) return;
+            
+            let deck = [...data.deck];
+            hand.push(deck.pop());
+            let score = calculateScore(hand);
+            
+            let updates = {
+                deck: deck,
+                [`playerHands.${target}`]: hand,
+                [`playerStates.${target}`]: score > 21 ? "bust" : "stand",
+                [`doubled.${target}`]: true,
+                currentTurnIndex: data.currentTurnIndex + 1
+            };
+            await updateDoc(doc(db, "rooms", currentRoomCode), updates);
+        };
+
+        window.split = async () => {
+            let data = localRoomData;
+            let target = data.players[data.currentTurnIndex];
+            if (!target.startsWith(myPseudo) || target.includes("_split")) return;
+            
+            let hand = data.playerHands[target];
+            if (hand.length !== 2 || hand[0].value !== hand[1].value) return;
+            
+            let deck = [...data.deck];
+            let ghost = target + "_split";
+            let newPlayers = [...data.players];
+            let pIndex = newPlayers.indexOf(target);
+            newPlayers.splice(pIndex + 1, 0, ghost);
+            
+            let hand1 = [hand[0], deck.pop()];
+            let hand2 = [hand[1], deck.pop()];
+            
+            let updates = {
+                players: newPlayers,
+                deck: deck,
+                [`playerHands.${target}`]: hand1,
+                [`playerHands.${ghost}`]: hand2,
+                [`playerStates.${ghost}`]: "playing",
+                [`pings.${ghost}`]: Date.now()
+            };
+            await updateDoc(doc(db, "rooms", currentRoomCode), updates);
         };
     </script>
 </body>
