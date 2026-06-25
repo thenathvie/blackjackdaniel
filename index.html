@@ -565,14 +565,17 @@
             let roundsCounter = (localRoomData.roundsSinceLastEvent || 0) + 1;
             
             // PROBABILITÉS D'ÉVÉNEMENTS
-            if (rand < 0.30) {
-    nextEvt = "happy_hour";        // 30%
-} else if (rand < 0.50) { 
-    nextEvt = "green_carpet";      // 20%
-} else if (rand < 0.65) {
-    nextEvt = "russian_roulette";  // 15%
-} else if (rand < 0.75) {
-    nextEvt = "red_alert";         // 10%
+            if (nextEvt === null && roundsCounter >= 3) {
+    let rand = Math.random(); 
+    if (rand < 0.30) {
+        nextEvt = "happy_hour";        // 30%
+    } else if (rand < 0.50) { 
+        nextEvt = "green_carpet";      // 20%
+    } else if (rand < 0.65) {
+        nextEvt = "russian_roulette";  // 15%
+    } else if (rand < 0.75) {
+        nextEvt = "red_alert";         // 10%
+    }
 }
             if (nextEvt) roundsCounter = 0;
 
