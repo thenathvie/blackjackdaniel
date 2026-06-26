@@ -693,28 +693,23 @@ const playersAreaEl = document.getElementById('tv-players-area');
 if (isFin && data.realResults) {
     playersAreaEl.style.display = "none";
     const players = [...new Set(data.players.filter(p => data.playerStates[p] !== "left").map(p => p.replace("_split", "")))];
-    
-    let sorted = players.map(p => {
+    let rows = players.map(p => {
         const res = data.realResults[p] || { take: 0, give: 0, culSec: false };
         const total = res.take + (data.receivedSips?.[p] || 0);
-        return { p, res, total };
-    }).sort((a, b) => b.total - a.total);
-
-    let rows = sorted.map(({ p, res, total }) => {
         const icon = res.culSec ? "💀" : total === 0 ? "👑" : "🍺";
-        const nameDisplay = res.culSec ? `${p} <span style="color:var(--danger); font-size:0.85em;">CUL SEC</span>` : p;
         return `<tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <td style="padding:14px 25px; font-weight:900; color:white; font-size:1.3em;">${icon} ${nameDisplay}</td>
+            <td style="padding:14px 25px; font-weight:900; color:white; font-size:1.3em;">${icon} ${p}</td>
             <td style="padding:14px 25px; color:var(--danger); font-weight:900; font-size:1.5em;">${total > 0 ? `${total} gorgée(s)` : "—"}</td>
+            <td style="padding:14px 25px; font-weight:900; font-size:1.3em;">${res.culSec ? "💀 CUL SEC" : total === 0 ? "👑 SAUVÉ" : ""}</td>
         </tr>`;
     }).join('');
-
     recapEl.innerHTML = `
         <table style="width:100%; border-collapse:collapse; font-family:'Montserrat',sans-serif;">
             <thead>
                 <tr style="background:rgba(212,175,55,0.2); border-bottom:2px solid var(--gold);">
                     <th style="padding:14px 25px; color:var(--gold); text-align:left; letter-spacing:2px; font-size:1.2em;">JOUEUR</th>
                     <th style="padding:14px 25px; color:var(--gold); text-align:left; letter-spacing:2px; font-size:1.2em;">À BOIRE</th>
+                    <th style="padding:14px 25px; color:var(--gold); text-align:left; letter-spacing:2px; font-size:1.2em;">STATUT</th>
                 </tr>
             </thead>
             <tbody>${rows}</tbody>
